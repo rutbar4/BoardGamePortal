@@ -8,5 +8,6 @@ namespace Portal.DTO
 
         public string ID { get; set; } = GuidUtils.GenerateGUID();
         public string? Name { get; set; }
+        //public string? Description { get; set; }
     }
 }

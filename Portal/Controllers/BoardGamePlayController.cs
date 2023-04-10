@@ -227,31 +227,26 @@ namespace Portal.Controllers
             return (string)row["id"];
         }
 
-        //private string GetBGId(string? organisationid, string boardGameName)
-        //{
-        //    if (organisationid is null)
-        //        return null;
+        private string GetBGId(string? organisationid, string boardGameName)
+        {
+            if (organisationid is null)
+                return null;
 
-        //    var organisation = GetOrganisation(organisationid);
+            var organisation = GetOrganisation(organisationid);
 
-        //    var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid, name=@boardGameName";
+            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid, name=@boardGameName";
 
-        //    MySqlDataAdapter da = new(sqlCmd, conn);
+            MySqlDataAdapter da = new(sqlCmd, conn);
 
-        //    da.SelectCommand.CommandType = CommandType.Text;
-        //    da.SelectCommand.Parameters.Add("@organisationName", MySqlDbType.VarChar).Value = organisationid;
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@organisationName", MySqlDbType.VarChar).Value = organisationid;
+            da.SelectCommand.Parameters.Add("@boardGameName", MySqlDbType.VarChar).Value = boardGameName;
 
 
-        //    DataTable dt = new();
-        //    da.Fill(dt);
-        //    var row = dt.AsEnumerable().FirstOrDefault();
-        //    return new BoardGame
-        //    {
-        //        ID = (string)row["id"],
-        //        Name = (string)row["name"],
-        //        GameType = (string)row["gameType"],
-        //        Organisation = organisation
-        //    };
-        //}
+            DataTable dt = new();
+            da.Fill(dt);
+            var row = dt.AsEnumerable().FirstOrDefault();
+            return (string)row["id"];
+        }
     }
 }
