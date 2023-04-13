@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
+using Portal.DBMethods;
 using Portal.DTO;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
@@ -14,12 +16,14 @@ namespace Portal.Controllers
     {
         MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
         private const string _user_login_table = "user_login";
-        private const string _organisation_login_table = "organisation_login";
+        private const string _login_table = "login";
         IConfiguration _configuration;
+        private readonly UserDBOperations _userDBOperations;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, UserDBOperations userDBOperations)
         {
             _configuration = configuration;
+            _userDBOperations = userDBOperations;
         }
 
         [HttpPost]
@@ -28,7 +32,7 @@ namespace Portal.Controllers
             if (logInData is null)
                 return BadRequest();
 
-            var sqlCmd = $"SELECT * FROM {_organisation_login_table} WHERE username=@username AND password=@password";
+            var sqlCmd = $"SELECT * FROM {_login_table} WHERE username=@username AND password=@password";
 
             var da = new MySqlDataAdapter(sqlCmd, conn);
 
@@ -72,5 +76,18 @@ namespace Portal.Controllers
                 );
             return token;
         }
+        [HttpPost]
+        [Route("registerUser")]
+        public IActionResult RegisterUser([FromBody] object requestBody)
+        {
+            User? organisation = JsonConvert.DeserializeObject<User>(requestBody.ToString());
+            if (organisation == null)
+                return BadRequest("Invalid request body");
+
+            _userDBOperations.InsertUser(organisation);
+
+            return Ok();
+        }
     }
+
 }

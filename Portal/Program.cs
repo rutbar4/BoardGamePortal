@@ -1,6 +1,7 @@
-using Cerberus.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Portal;
+using Portal.DBMethods;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IConfiguration>(configuration);
+builder.Services.AddSingleton<BoardGameDBOperations>(new BoardGameDBOperations());
+builder.Services.AddSingleton<OrganisationDBOperations>(new OrganisationDBOperations());
+builder.Services.AddSingleton<UserDBOperations>(new UserDBOperations());
 
 builder.Services.AddCors(options =>
 {

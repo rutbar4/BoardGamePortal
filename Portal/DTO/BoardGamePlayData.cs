@@ -1,6 +1,6 @@
 ﻿using Portal.Utils;
 
-namespace Portal.Models
+namespace Portal.DTO
 {
     public class BoardGamePlayData
     {

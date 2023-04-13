@@ -3,7 +3,7 @@ using Mysqlx;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
-namespace Cerberus.Middleware;
+namespace Portal;
 
 public class JwtMiddleware
 {
@@ -20,14 +20,18 @@ public class JwtMiddleware
     {
         var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last().ToString();
         var deconstructedToken = ValidateToken(token);
-        string? userId = deconstructedToken.Value.userId;
-        string? profileId = deconstructedToken.Value.profileId;
-        if (userId != null && profileId != null)
+        
+        if (deconstructedToken is not null)
         {
-            // attach user to context on successful jwt validation
-            context.Items.Add("UserId", userId);
-            context.Items.Add("profileId", profileId);
-            _next.Invoke(context);
+            string? userId = deconstructedToken.Value.userId;
+            string? profileId = deconstructedToken.Value.profileId;
+            if (userId is not null && profileId is not null)
+            {
+                // attach user to context on successful jwt validation
+                context.Items.Add("UserId", userId);
+                context.Items.Add("profileId", profileId);
+                _next.Invoke(context);
+            }
         }
         else
         {
