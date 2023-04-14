@@ -12,7 +12,7 @@ namespace Portal.DBMethods
         private const string _board_game_table = "board_game";
         private const string _organisation_table = "organisation";
         private const string _board_game_player_table = "board_game_player";
-        internal string[] GetAllBoardGamesByOrganisationName(string organisationName)
+        internal string[] GetAllBoardGamesNamesByOrganisationName(string organisationName)
         {
             var orgId = GetOrganisationId(organisationName);
 
@@ -65,10 +65,56 @@ namespace Portal.DBMethods
                 ID = (string)row["id"],
                 Name = (string)row["name"],
                 GameType = (string)row["gameType"],
-                OrganisationName = boardGameName
             };
         }
+        public BoardGame GetBGByOrganisationIdAndBGName(string? organisationid, string? boardGameName)
+        {
+            if (organisationid is null || boardGameName is null)
+                return null;
 
+            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid AND name=name";
+
+            MySqlDataAdapter da = new(sqlCmd, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@organisationid", MySqlDbType.VarChar).Value = organisationid;
+            da.SelectCommand.Parameters.Add("@name", MySqlDbType.VarChar).Value = boardGameName;
+
+            DataTable dt = new();
+            da.Fill(dt);
+            var row = dt.AsEnumerable().FirstOrDefault();
+
+            return new BoardGame
+            {
+                ID = (string)row["id"],
+                Name = (string)row["name"],
+                GameType = (string)row["gameType"]
+            };
+        }
+        public List<BoardGame> GetAllBGByOrganisation(string? organisationid)
+        {
+            if (organisationid is null)
+                return null;
+
+            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid";
+
+            MySqlDataAdapter da = new(sqlCmd, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@organisationid", MySqlDbType.VarChar).Value = organisationid;
+
+
+            DataTable dt = new();
+            da.Fill(dt);
+            var rows = dt.AsEnumerable().Select(row => new BoardGame
+            {
+                ID = (string)row["id"],
+                Name = (string)row["name"],
+                GameType = (string)row["gameType"]
+            }).ToList();
+
+            return rows;
+        }
         internal string GetBGId(BoardGamePlayData boardGamePlayData)
         {
             var organisation = GetOrganisation(boardGamePlayData.Organisation);
@@ -165,7 +211,34 @@ namespace Portal.DBMethods
             var row = dt.AsEnumerable().FirstOrDefault();
             return (string)row["id"];
         }
+        internal void DeleteBGOfOrganisation(string organisationId, string boardGameName)
+        {
+            conn.Open();
+            MySqlCommand cmd = conn.CreateCommand();
+            cmd.Connection = conn;
+            var boardGame = GetBG(organisationId, boardGameName);
+            var insertQuery = $"DELETE FROM {_board_game_table} WHERE id=@id";
+                cmd.CommandText = insertQuery;
+            cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = boardGame.ID;
+            cmd.ExecuteNonQuery();
+            conn.Close();
+        }
+        internal void InsertBGOfOrganisation(BoardGame model)
+        {
+            conn.Open();
+            MySqlCommand cmd = conn.CreateCommand();
+            cmd.Connection = conn;
 
+            var insertQuery = $"INSERT INTO {_board_game_table} SET id=@id, name=@name, gameType=@gameType, fk_organisationId=@fk_organisationId";
+            cmd.CommandText = insertQuery;
+            cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = model.ID;
+            cmd.Parameters.Add("@name", MySqlDbType.VarChar).Value = model.Name;
+            cmd.Parameters.Add("@gameType", MySqlDbType.VarChar).Value = model.GameType;
+            cmd.Parameters.Add("@fk_organisationId", MySqlDbType.VarChar).Value = model.OrganisationId;
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+        }
         internal void InsertBGPlayData(BoardGamePlayData model, string boardGameId)
         {
             conn.Open();

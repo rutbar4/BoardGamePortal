@@ -15,6 +15,6 @@ namespace Portal.DTO
         public string ID { get; set; } = GuidUtils.GenerateGUID();
         public string? Name { get; set; }
         public string? GameType { get; set; }
-        public string? OrganisationName { get; set; }
+        public string? OrganisationId { get; set; }
     }
 }
