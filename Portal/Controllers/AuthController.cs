@@ -19,11 +19,13 @@ namespace Portal.Controllers
         private const string _login_table = "login";
         IConfiguration _configuration;
         private readonly UserDBOperations _userDBOperations;
+        private readonly OrganisationDBOperations _organisationDBOperations;
 
-        public AuthController(IConfiguration configuration, UserDBOperations userDBOperations)
+        public AuthController(IConfiguration configuration, UserDBOperations userDBOperations, OrganisationDBOperations organisationDBOperations)
         {
             _configuration = configuration;
             _userDBOperations = userDBOperations;
+            _organisationDBOperations = organisationDBOperations;
         }
 
         [HttpPost]
@@ -45,24 +47,39 @@ namespace Portal.Controllers
             if (dt.Rows.Count == 0)
                 return Unauthorized();
 
-            var token = GetAuthClaims((string)dt.Rows[0]["id"], (string)dt.Rows[0]["fk_profileId"]);
-
-            var response = new LogInResponse
+            string id = (string)dt.Rows[0]["id"];
+            var role = (UserType)int.Parse(id[0].ToString());
+            if (role == UserType.User)
             {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                Username = logInData.Username
-            };
-            return Ok(response);
+                var token = CreateJWTToken(id, UserType.User);
+                var response = new
+                {
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    User = _userDBOperations.GetUser(id)
+                };
+
+                return Ok(response);
+            }
+            if (role == UserType.Orgasnisation)
+            {
+                var token = CreateJWTToken(id, UserType.Orgasnisation);
+                var response = new
+                {
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    Organisation = _organisationDBOperations.GetOrganisation(id)
+                };
+                return Ok(response);
+            }
+            return BadRequest();
         }
 
-        private JwtSecurityToken GetAuthClaims(string userId, string profileId)
+        private JwtSecurityToken CreateJWTToken(string userId, UserType userType)
         {
             var authClaims = new List<Claim>
         {
             new Claim("UserId", userId),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Role, "User"),
-            new Claim("profileId", profileId)
+            new Claim("Role", userType.ToString())
         };
 
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
@@ -76,18 +93,48 @@ namespace Portal.Controllers
                 );
             return token;
         }
+
         [HttpPost]
         [Route("registerUser")]
         public IActionResult RegisterUser([FromBody] object requestBody)
         {
-            User? organisation = JsonConvert.DeserializeObject<User>(requestBody.ToString());
+            User? user = JsonConvert.DeserializeObject<User>(requestBody.ToString());
+            if (user == null)
+                return BadRequest("Invalid request body");
+
+            _userDBOperations.InsertUser(user); 
+
+            var token = CreateJWTToken(user.ID, UserType.User);
+
+            var response = new
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                User = user,
+            };
+
+            return Ok(response);
+        }
+
+        [HttpPost]
+        [Route("registerOrganisation")]
+        public IActionResult RegisterOrganisation([FromBody] object requestBody)
+        {
+            Organisation? organisation = JsonConvert.DeserializeObject<Organisation>(requestBody.ToString());
             if (organisation == null)
                 return BadRequest("Invalid request body");
 
-            _userDBOperations.InsertUser(organisation);
+            _organisationDBOperations.InsertOrganisation(organisation);
 
-            return Ok();
+            var token = CreateJWTToken(organisation.ID, UserType.Orgasnisation);
+
+            var response = new
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                Organisation = organisation,
+            };
+
+            return Ok(response);
         }
-    }
 
+    }
 }

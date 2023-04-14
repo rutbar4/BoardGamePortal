@@ -70,7 +70,17 @@ app.UseCors(builder =>
 
 app.UseAuthorization();
 
-app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/user"), appBuilder =>
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/profile"), appBuilder =>
+{
+    appBuilder.UseMiddleware<JwtMiddleware>();
+}); 
+
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/BoardGamePlay"), appBuilder =>
+{
+    appBuilder.UseMiddleware<JwtMiddleware>();
+});
+
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/Organisation"), appBuilder =>
 {
     appBuilder.UseMiddleware<JwtMiddleware>();
 });

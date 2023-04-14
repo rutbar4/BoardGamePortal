@@ -29,13 +29,38 @@ namespace Portal.DBMethods
             cmd.Parameters.Add("@city", MySqlDbType.VarChar).Value = model.City;
             cmd.ExecuteNonQuery();
 
-            var insertQuery2 = $"INSERT INTO {login_table} SET id=@id2, password=@password, username=@username ";
+            var insertQuery2 = $"INSERT INTO {login_table} SET id=@id, password=@password, username=@username ";
             cmd.CommandText = insertQuery2;
-            cmd.Parameters.Add("@id2", MySqlDbType.VarChar).Value = GuidUtils.GenerateGUID();
             cmd.Parameters.Add("@password", MySqlDbType.VarChar).Value = model.Password;
             cmd.ExecuteNonQuery();
 
             conn.Close();
+        }
+
+        public Organisation GetOrganisation(string? id)
+        {
+            if (id is null)
+                return null;
+
+            var sqlCmd = $"SELECT * FROM {_organisation_table} WHERE id=@id";
+
+            var da = new MySqlDataAdapter(sqlCmd, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = id;
+
+            var dt = new DataTable();
+            da.Fill(dt);
+            var row = dt.AsEnumerable().FirstOrDefault();
+            return new Organisation
+            {
+                ID = (string)row["id"],
+                Name = (string)row["name"],
+                Username = (string)row["username"],
+                Email = (string)row["email"],
+                Address = (string)row["address"],
+                City = (string)row["city"],
+            };
         }
     }
 }

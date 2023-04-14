@@ -4,7 +4,7 @@ namespace Portal.DTO
 {
     public class User
     {
-        public string ID { get; set; } = GuidUtils.GenerateGUID();
+        public string ID { get; set; } = GuidUtils.GenerateGUID((int)UserType.User);
         public string? Name { get; set; }
         public string? Username { get; set; }
         public string? Email { get; set; }

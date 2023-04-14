@@ -24,12 +24,12 @@ public class JwtMiddleware
         if (deconstructedToken is not null)
         {
             string? userId = deconstructedToken.Value.userId;
-            string? profileId = deconstructedToken.Value.profileId;
-            if (userId is not null && profileId is not null)
+            string? role = deconstructedToken.Value.role;
+            if (userId is not null && role is not null)
             {
                 // attach user to context on successful jwt validation
                 context.Items.Add("UserId", userId);
-                context.Items.Add("profileId", profileId);
+                context.Items.Add("Role", role);
                 _next.Invoke(context);
             }
         }
@@ -41,7 +41,7 @@ public class JwtMiddleware
         }
     }
 
-    private (string? userId, string? profileId)? ValidateToken(string token)
+    private (string? userId, string? role)? ValidateToken(string token)
     {
         if (token == null)
             return null;
@@ -62,10 +62,10 @@ public class JwtMiddleware
 
             var jwtToken = (JwtSecurityToken)validatedToken;
             var userId = jwtToken.Claims.First(x => x.Type == "UserId").Value;
-            var profileId = jwtToken.Claims.First(x => x.Type == "profileId").Value;
+            var role = jwtToken.Claims.First(x => x.Type == "Role").Value;
 
             // return user id from JWT token if validation successful
-            return (userId, profileId);
+            return (userId, role);
         }
         catch
         {

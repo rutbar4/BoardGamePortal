@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using Portal.DTO;
 using Portal.Utils;
+using System.Data;
 
 namespace Portal.DBMethods
 {
@@ -16,21 +17,43 @@ namespace Portal.DBMethods
             MySqlCommand cmd = conn.CreateCommand();
             cmd.Connection = conn;
 
-            var insertQuery = $"INSERT INTO {_user_table} SET id=@id, name=@name, username=@username, email=@email, password=@password";
+            var insertQuery = $"INSERT INTO {_user_table} SET id=@id, name=@name, username=@username, email=@email";
             cmd.CommandText = insertQuery;
             cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = model.ID;
             cmd.Parameters.Add("@name", MySqlDbType.VarChar).Value = model.Name;
             cmd.Parameters.Add("@username", MySqlDbType.VarChar).Value = model.Username;
             cmd.Parameters.Add("@email", MySqlDbType.VarChar).Value = model.Email;
+            cmd.ExecuteNonQuery();
+
+            var insertQuery2 = $"INSERT INTO {login_table} SET id=@id, password=@password, username=@username";
+            cmd.CommandText = insertQuery2;
             cmd.Parameters.Add("@password", MySqlDbType.VarChar).Value = model.Password;
             cmd.ExecuteNonQuery();
 
-            var insertQuery2 = $"INSERT INTO {login_table} SET id=@id2, password=@password, username=@username";
-            cmd.CommandText = insertQuery2;
-            cmd.Parameters.Add("@id2", MySqlDbType.VarChar).Value = GuidUtils.GenerateGUID();
-            cmd.ExecuteNonQuery();
-
             conn.Close();
+        }
+        public User GetUser(string? id)
+        {
+            if (id is null)
+                return null;
+
+            var sqlCmd = $"SELECT * FROM {_user_table} WHERE id=@id";
+
+            var da = new MySqlDataAdapter(sqlCmd, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = id;
+
+            var dt = new DataTable();
+            da.Fill(dt);
+            var row = dt.AsEnumerable().FirstOrDefault();
+            return new User
+            {
+                ID = (string)row["id"],
+                Name = (string)row["name"],
+                Username = (string)row["username"],
+                Email = (string)row["email"],
+            };
         }
     }
 }

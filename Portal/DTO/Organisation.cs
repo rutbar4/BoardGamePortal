@@ -5,7 +5,7 @@ namespace Portal.DTO
 {
     public class Organisation
     {
-        public string ID { get; set; } = GuidUtils.GenerateGUID("Org");
+        public string ID { get; set; } = GuidUtils.GenerateGUID((int)UserType.Orgasnisation);
         public string? Name { get; set; }
         public string? Username { get; set; }
         public string? Password { get; set; }

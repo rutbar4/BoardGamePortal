@@ -43,7 +43,7 @@ namespace Portal.DBMethods
 
             return names;
         }
-        internal BoardGame GetBG(string? organisationid, string boardGameName)
+        private BoardGame GetBG(string? organisationid, string boardGameName)
         {
             if (organisationid is null)
                 return null;
@@ -76,57 +76,57 @@ namespace Portal.DBMethods
             return bg.ID;
         }
 
-        internal string GetBGId(string? organisationid, string boardGameName)
-        {
-            if (organisationid is null)
-                return null;
+        //internal string GetBGId(string? organisationid, string boardGameName)
+        //{
+        //    if (organisationid is null)
+        //        return null;
 
-            var organisation = GetOrganisation(organisationid);
+        //    var organisation = GetUser(organisationid);
 
-            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid, name=@boardGameName";
+        //    var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid, name=@boardGameName";
 
-            MySqlDataAdapter da = new(sqlCmd, conn);
+        //    MySqlDataAdapter da = new(sqlCmd, conn);
 
-            da.SelectCommand.CommandType = CommandType.Text;
-            da.SelectCommand.Parameters.Add("@organisationName", MySqlDbType.VarChar).Value = organisationid;
-            da.SelectCommand.Parameters.Add("@boardGameName", MySqlDbType.VarChar).Value = boardGameName;
+        //    da.SelectCommand.CommandType = CommandType.Text;
+        //    da.SelectCommand.Parameters.Add("@organisationName", MySqlDbType.VarChar).Value = organisationid;
+        //    da.SelectCommand.Parameters.Add("@boardGameName", MySqlDbType.VarChar).Value = boardGameName;
 
 
-            DataTable dt = new();
-            da.Fill(dt);
-            var row = dt.AsEnumerable().FirstOrDefault();
-            return (string)row["id"];
-        }
-        internal List<BoardGamePlayData>? GetBGPlayData(string? id)
-        {
-            if (id is null)
-                return null;
+        //    DataTable dt = new();
+        //    da.Fill(dt);
+        //    var row = dt.AsEnumerable().FirstOrDefault();
+        //    return (string)row["id"];
+        //}
+        //internal List<BoardGamePlayData>? GetBGPlayData(string? id)
+        //{
+        //    if (id is null)
+        //        return null;
 
-            var sqlCmd = $"SELECT * FROM {_played_game_table} WHERE fk_masterAccountId=@userId";
+        //    var sqlCmd = $"SELECT * FROM {_played_game_table} WHERE fk_masterAccountId=@userId";
 
-            var da = new MySqlDataAdapter(sqlCmd, conn);
+        //    var da = new MySqlDataAdapter(sqlCmd, conn);
 
-            da.SelectCommand.CommandType = CommandType.Text;
-            da.SelectCommand.Parameters.Add("@userId", MySqlDbType.VarChar).Value = id;
+        //    da.SelectCommand.CommandType = CommandType.Text;
+        //    da.SelectCommand.Parameters.Add("@userId", MySqlDbType.VarChar).Value = id;
 
-            var dt = new DataTable();
-            da.Fill(dt);
+        //    var dt = new DataTable();
+        //    da.Fill(dt);
 
-            if (dt.Rows.Count == 0)
-                return new List<BoardGamePlayData>();
+        //    if (dt.Rows.Count == 0)
+        //        return new List<BoardGamePlayData>();
 
-            return dt.AsEnumerable().ToList().Select(row => new BoardGamePlayData
-            {
-                ID = (string)row["id"],
-                BoardGameName = (string)row["fk_boardGameId"],
-                Winner = (string)row["playerWinner"],
-                Time_m = DBUtils.ConvertFromDBVal<DateTime>(row["playTime"]).Date.Hour.ToString(),
-                Time_h = DBUtils.ConvertFromDBVal<DateTime>(row["playTime"]).Date.Minute.ToString(),
-                WinnerPoints = DBUtils.ConvertFromDBVal<int>(row["winnerPoints"])
-            }).ToList();
-        }
+        //    return dt.AsEnumerable().ToList().Select(row => new BoardGamePlayData
+        //    {
+        //        ID = (string)row["id"],
+        //        BoardGameName = (string)row["fk_boardGameId"],
+        //        Winner = (string)row["playerWinner"],
+        //        Time_m = DBUtils.ConvertFromDBVal<DateTime>(row["playTime"]).Date.Hour.ToString(),
+        //        Time_h = DBUtils.ConvertFromDBVal<DateTime>(row["playTime"]).Date.Minute.ToString(),
+        //        WinnerPoints = DBUtils.ConvertFromDBVal<int>(row["winnerPoints"])
+        //    }).ToList();
+        //}
 
-        internal Organisation GetOrganisation(string? organisationName)
+        private Organisation GetOrganisation(string? organisationName)
         {
             if (organisationName is null)
                 return null;
@@ -148,7 +148,7 @@ namespace Portal.DBMethods
             };
         }
 
-        internal string GetOrganisationId(string organisationName)
+        private string GetOrganisationId(string organisationName)
         {
             if (organisationName is null)
                 return null;
@@ -184,6 +184,7 @@ namespace Portal.DBMethods
 
             conn.Close();
         }
+
         internal void InsertBGPlayers(BoardGamePlayers players)
         {
             conn.Open();
