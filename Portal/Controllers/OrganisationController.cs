@@ -15,5 +15,18 @@ namespace Portal.Controllers
         {
             _organisationDBOperations = organisationDBOperations;
         }
+
+        [HttpPut]
+        [Route("UpdateOrganisation")]
+        public IActionResult UpdateOrganisation([FromBody] Organisation organisation)
+        {
+            if (organisation is null)
+                return BadRequest("Invalid request body");
+
+            _organisationDBOperations.UpdateOrganisation(organisation);
+
+            return Ok(organisation);
+        }
+
     }
 }

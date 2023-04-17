@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MySql.Data.MySqlClient;
+using Mysqlx.Crud;
 using Portal.DTO;
 using Portal.Utils;
 using System.Data;
@@ -19,6 +20,8 @@ namespace Portal.DBMethods
             MySqlCommand cmd = conn.CreateCommand();
             cmd.Connection = conn;
 
+            if (model.Username is null) throw new Exception("Username is not valid");
+
             var insertQuery = $"INSERT INTO {_organisation_table} SET id=@id, name=@name, username=@username, email=@email, address=@address, city=@city";
             cmd.CommandText = insertQuery;
             cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = model.ID;
@@ -28,6 +31,8 @@ namespace Portal.DBMethods
             cmd.Parameters.Add("@address", MySqlDbType.VarChar).Value = model.Address;
             cmd.Parameters.Add("@city", MySqlDbType.VarChar).Value = model.City;
             cmd.ExecuteNonQuery();
+
+            if (model.Password is null) throw new Exception("Password is not valid");
 
             var insertQuery2 = $"INSERT INTO {login_table} SET id=@id, password=@password, username=@username ";
             cmd.CommandText = insertQuery2;
@@ -40,7 +45,7 @@ namespace Portal.DBMethods
         public Organisation GetOrganisation(string? id)
         {
             if (id is null)
-                return null;
+                throw new Exception("id was null");
 
             var sqlCmd = $"SELECT * FROM {_organisation_table} WHERE id=@id";
 
@@ -60,7 +65,35 @@ namespace Portal.DBMethods
                 Email = (string)row["email"],
                 Address = (string)row["address"],
                 City = (string)row["city"],
+                Description = DBUtils.ConvertFromDBVal<string>(row["description"]),
             };
+        }
+        public void UpdateOrganisation(Organisation? organisation)
+        {
+            conn.Open();
+            MySqlCommand cmd = conn.CreateCommand();
+            cmd.Connection = conn;
+
+            if (organisation is null)
+                throw new Exception("Organisation was null");
+
+            var updateQuery = $"UPDATE {_organisation_table} SET name=@name, email=@email, address=@addreess, city=@city, description=@description WHERE id=@id";
+            cmd.CommandText = updateQuery;
+            cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = organisation.ID;
+            cmd.Parameters.Add("@name", MySqlDbType.VarChar).Value = organisation.Name;
+            cmd.Parameters.Add("@email", MySqlDbType.VarChar).Value = organisation.Email;
+            cmd.Parameters.Add("@address", MySqlDbType.VarChar).Value = organisation.Address;
+            cmd.Parameters.Add("@city", MySqlDbType.VarChar).Value = organisation.City;
+            cmd.Parameters.Add("@description", MySqlDbType.VarChar).Value = organisation.Description;
+            cmd.ExecuteNonQuery();
+
+
+            var updatePass = $"UPDATE {login_table} SET password=@password WHERE id=@id";
+            cmd.CommandText = updatePass;
+            cmd.Parameters.Add("@password", MySqlDbType.VarChar).Value = organisation.Password;
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
         }
     }
 }

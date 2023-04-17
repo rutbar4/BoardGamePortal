@@ -43,7 +43,7 @@ namespace Portal.DBMethods
 
             return names;
         }
-        private BoardGame GetBG(string? organisationid, string boardGameName)
+        public BoardGame GetBGbyOrgIdAndBGName(string? organisationid, string boardGameName)
         {
             if (organisationid is null)
                 return null;
@@ -67,18 +67,18 @@ namespace Portal.DBMethods
                 GameType = (string)row["gameType"],
             };
         }
-        public BoardGame GetBGByOrganisationIdAndBGName(string? organisationid, string? boardGameName)
+        
+        public BoardGame GetBGByBDId(string? boardGameid)
         {
-            if (organisationid is null || boardGameName is null)
+            if (boardGameid is null)
                 return null;
 
-            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid AND name=name";
+            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE id=@id";
 
             MySqlDataAdapter da = new(sqlCmd, conn);
 
             da.SelectCommand.CommandType = CommandType.Text;
-            da.SelectCommand.Parameters.Add("@organisationid", MySqlDbType.VarChar).Value = organisationid;
-            da.SelectCommand.Parameters.Add("@name", MySqlDbType.VarChar).Value = boardGameName;
+            da.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = boardGameid;
 
             DataTable dt = new();
             da.Fill(dt);
@@ -118,7 +118,7 @@ namespace Portal.DBMethods
         internal string GetBGId(BoardGamePlayData boardGamePlayData)
         {
             var organisation = GetOrganisation(boardGamePlayData.Organisation);
-            var bg = GetBG(organisation.ID, boardGamePlayData.BoardGameName);
+            var bg = GetBGbyOrgIdAndBGName(organisation.ID, boardGamePlayData.BoardGameName);
             return bg.ID;
         }
 
@@ -211,12 +211,12 @@ namespace Portal.DBMethods
             var row = dt.AsEnumerable().FirstOrDefault();
             return (string)row["id"];
         }
-        internal void DeleteBGOfOrganisation(string organisationId, string boardGameName)
+        internal void DeleteBGOfOrganisation(string boardGameId)
         {
             conn.Open();
             MySqlCommand cmd = conn.CreateCommand();
             cmd.Connection = conn;
-            var boardGame = GetBG(organisationId, boardGameName);
+            var boardGame = GetBGByBDId(boardGameId);
             var insertQuery = $"DELETE FROM {_board_game_table} WHERE id=@id";
                 cmd.CommandText = insertQuery;
             cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = boardGame.ID;

@@ -47,16 +47,17 @@ namespace Portal.Controllers
         }
 
         [HttpDelete]
-        [Route("DeleteOrganisationBG")]
-        public IActionResult DeleteBGOfOrganisation([FromBody] string organisationId, [FromBody] string boardGameName)
+        [Route("DeleteOrganisationBG/{boardGameid}")]
+        public IActionResult DeleteBGOfOrganisation(string boardGameid)
         {
-            if (organisationId is null || boardGameName is null)
+            if (boardGameid is null)
                 return BadRequest("Invalid request body");
 
-            var boardGame = _boardGameDBOperations.GetBGByOrganisationIdAndBGName(organisationId, boardGameName);
-            _boardGameDBOperations.DeleteBGOfOrganisation(organisationId, boardGameName);
+            _boardGameDBOperations.DeleteBGOfOrganisation(boardGameid);
+            string? userId = HttpContext.Items.First(i => i.Key == "UserId").Value as string;
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(userId);
 
-            return Ok(boardGame);//returns deleted item
+            return Ok(boardGames);//returns not deleted items
         }
 
         [HttpGet]
@@ -70,20 +71,31 @@ namespace Portal.Controllers
 
         [HttpGet]
         [Route("GetBGByOrganisation/{organisationName}")]
-        public IActionResult GetBoardGameByOrganisation(string organisationName)
+        public IActionResult GetAllBoardGamesNamesByOrganisation(string organisationName)
         {
             var boardGames = _boardGameDBOperations.GetAllBoardGamesNamesByOrganisationName(organisationName);
 
             return Ok(boardGames);
         }
-        [HttpGet]
 
-        [Route("GetAllBGDataByOrganisation/{organisationName}")]
-        public IActionResult GetAllDataBoardGameByOrganisation(string organisationName)
+        [HttpGet]
+        [Route("GetAllBGDataByOrganisation/{organisationID}")]
+        public IActionResult GetAllDataBoardGameByOrganisation(string organisationID)
         {
-            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationName);
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationID);
 
             return Ok(boardGames);
         }
+
+        //[HttpGet]
+        //[Route("GetBGDataByBgNameAndOrgId/{organisationName}")]
+        //public IActionResult GetBGDataByBgNameAndOrgId(string organisationID, string boardgameName)
+        //{
+        //    var boardGames = _boardGameDBOperations.GetBGbyOrgIdAndBGName(organisationID, boardgameName);
+
+        //    return Ok(boardGames);
+        //}
+
+
     }
 }
