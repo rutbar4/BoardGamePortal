@@ -9,9 +9,11 @@ namespace Portal.DTO
         public string? BoardGameName { get; set; }
         public string? BoardGameType { get; set; }
         public string[]? Players { get; set; }
+        public int? PlayersCount { get; set; }
         public string? Winner { get; set; }
         public string? Time_m { get; set; }
         public string? Time_h { get; set; }
         public int? WinnerPoints { get; set; }
+        public DateTime? DatePlayed { get; set; }
     }
 }

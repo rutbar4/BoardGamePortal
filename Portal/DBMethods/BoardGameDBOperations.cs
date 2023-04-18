@@ -245,7 +245,7 @@ namespace Portal.DBMethods
             MySqlCommand cmd = conn.CreateCommand();
             cmd.Connection = conn;
 
-            var insertQuery = $"INSERT INTO {_played_game_table} SET id=@id, fk_boardGameId=@boardgamename, playerWinner=@playerWinner, playTime=@timePlayed, " +
+            var insertQuery = $"INSERT INTO {_played_game_table} SET id=@id, fk_boardGameId=@boardgamename, playerWinner=@playerWinner, playTime=@timePlayed, datePlayed=@datePlayed, " +
                 $"winnerPoints=@winnerpoints";
             cmd.CommandText = insertQuery;
             cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = model.ID;
@@ -253,6 +253,7 @@ namespace Portal.DBMethods
             cmd.Parameters.Add("@playerWinner", MySqlDbType.VarChar).Value = model.Winner;
             cmd.Parameters.Add("@timePlayed", MySqlDbType.DateTime).Value = new DateTime(1000, 1, 1, int.Parse(model.Time_h), int.Parse(model.Time_m), 0);
             cmd.Parameters.Add("@winnerpoints", MySqlDbType.Int32).Value = model.WinnerPoints;
+            cmd.Parameters.Add("@datePlayed", MySqlDbType.DateTime).Value = model.DatePlayed;
             cmd.ExecuteNonQuery();
 
             conn.Close();

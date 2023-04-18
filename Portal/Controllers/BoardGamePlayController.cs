@@ -10,10 +10,12 @@ namespace Portal.Controllers
     public class BoardGamePlayController :ControllerBase
     {
         private readonly BoardGameDBOperations _boardGameDBOperations;
+        private readonly BoardGamePlayDBOperations _boardGamePlayDBOperations;
 
-        public BoardGamePlayController(BoardGameDBOperations boardGameDBOperations)
+        public BoardGamePlayController(BoardGameDBOperations boardGameDBOperations, BoardGamePlayDBOperations boardGamePlayDBOperations)
         {
             _boardGameDBOperations = boardGameDBOperations;
+            _boardGamePlayDBOperations = boardGamePlayDBOperations;
         }
 
         [HttpPost]
@@ -32,6 +34,18 @@ namespace Portal.Controllers
 
             return Ok();
         }
+        [HttpGet]
+        [Route("AllPlaysByOrganisationId/{organisationId}")]
+        public IActionResult GetAllPlaysByOrganisationId(string organisationId)
+        {
+            if (organisationId is null)
+                return BadRequest("Invalid request body");
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
+            var plays = boardGames.Select(s => _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(s.ID)).ToList();
+
+            return Ok(plays);
+        }
+
         [HttpPost]
         [Route("AddOrganisationBG")]
         public IActionResult AddBGOfOrganisation([FromBody] object requestBody)

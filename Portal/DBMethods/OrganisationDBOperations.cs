@@ -12,7 +12,7 @@ namespace Portal.DBMethods
     {
         MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
         private const string _organisation_table = "organisation";
-        private const string login_table = "login";
+        private const string _login_table = "login";
 
         internal void InsertOrganisation(Organisation model)
         {
@@ -34,7 +34,7 @@ namespace Portal.DBMethods
 
             if (model.Password is null) throw new Exception("Password is not valid");
 
-            var insertQuery2 = $"INSERT INTO {login_table} SET id=@id, password=@password, username=@username ";
+            var insertQuery2 = $"INSERT INTO {_login_table} SET id=@id, password=@password, username=@username ";
             cmd.CommandText = insertQuery2;
             cmd.Parameters.Add("@password", MySqlDbType.VarChar).Value = model.Password;
             cmd.ExecuteNonQuery();
@@ -48,15 +48,25 @@ namespace Portal.DBMethods
                 throw new Exception("id was null");
 
             var sqlCmd = $"SELECT * FROM {_organisation_table} WHERE id=@id";
+            var sqlCmdLogin = $"SELECT * FROM {_login_table} WHERE id=@id";
 
             var da = new MySqlDataAdapter(sqlCmd, conn);
+            var daLogin = new MySqlDataAdapter(sqlCmdLogin, conn);
 
             da.SelectCommand.CommandType = CommandType.Text;
             da.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = id;
 
+            daLogin.SelectCommand.CommandType = CommandType.Text;
+            daLogin.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = id;
+
             var dt = new DataTable();
             da.Fill(dt);
+
+            var dtLogin = new DataTable();
+            daLogin.Fill(dtLogin);
+
             var row = dt.AsEnumerable().FirstOrDefault();
+            var rowLogin = dtLogin.AsEnumerable().FirstOrDefault();
             return new Organisation
             {
                 ID = (string)row["id"],
@@ -65,6 +75,7 @@ namespace Portal.DBMethods
                 Email = (string)row["email"],
                 Address = (string)row["address"],
                 City = (string)row["city"],
+                Password = (string)rowLogin["password"],
                 Description = DBUtils.ConvertFromDBVal<string>(row["description"]),
             };
         }
@@ -77,7 +88,7 @@ namespace Portal.DBMethods
             if (organisation is null)
                 throw new Exception("Organisation was null");
 
-            var updateQuery = $"UPDATE {_organisation_table} SET name=@name, email=@email, address=@addreess, city=@city, description=@description WHERE id=@id";
+            var updateQuery = $"UPDATE {_organisation_table} SET name=@name, email=@email, address=@address, city=@city, description=@description WHERE id=@id";
             cmd.CommandText = updateQuery;
             cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = organisation.ID;
             cmd.Parameters.Add("@name", MySqlDbType.VarChar).Value = organisation.Name;
@@ -88,7 +99,7 @@ namespace Portal.DBMethods
             cmd.ExecuteNonQuery();
 
 
-            var updatePass = $"UPDATE {login_table} SET password=@password WHERE id=@id";
+            var updatePass = $"UPDATE {_login_table} SET password=@password WHERE id=@id";
             cmd.CommandText = updatePass;
             cmd.Parameters.Add("@password", MySqlDbType.VarChar).Value = organisation.Password;
             cmd.ExecuteNonQuery();
