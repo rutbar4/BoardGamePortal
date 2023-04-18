@@ -41,9 +41,22 @@ namespace Portal.Controllers
             if (organisationId is null)
                 return BadRequest("Invalid request body");
             var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
-            var plays = boardGames.Select(s => _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(s.ID)).ToList();
+            //var plays = boardGames.Where(s => s is not null).Select(s => _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(s.ID)).ToList();
+            var list = new List<BoardGamePlayData>();
+            foreach (var play in boardGames)
+            {
+                if(play is not null)
+                {
+                    var i = _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(play.ID);
+                    if(i is not null)
+                    foreach(var j in i)
+                    {
+                        list.Add(j);
+                    }
+                }
+            }
 
-            return Ok(plays);
+            return Ok(list);
         }
 
         [HttpPost]
