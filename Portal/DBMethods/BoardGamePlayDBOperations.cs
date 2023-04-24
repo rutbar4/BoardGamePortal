@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI.Common;
 using Portal.DTO;
 using Portal.Utils;
 using System.Data;
@@ -64,6 +65,7 @@ namespace Portal.DBMethods
                 }
             }
         }
+
         public int GetBGPlayCount(string boardGameid)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
@@ -86,40 +88,74 @@ namespace Portal.DBMethods
         }
         public string[] GetTopMonthPlayer(List<BoardGamePlayData> list, DateTime month)
         {
-            var result = list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year))
-                .GroupBy(i => i.Winner)
+            if (list.Count != 0)
+            {
+                List<BoardGamePlayData> listByMonth = new (list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year)));
+                if(listByMonth.Count != 0) { 
+                var result = listByMonth
+                    .GroupBy(i => i.Winner)
+                    .GroupBy(g => g.Count())
+                    .OrderByDescending(g => g.Key)
+                    .First()
+                    .Select(g => g.Key)
+                    .ToArray();
+
+                return result;
+                }
+                return null;
+            }
+            return null;
+        }
+
+        public string[] GetTopMonthGame(List<BoardGamePlayData> list, DateTime month)
+        {
+            if (list.Count != 0)
+            {
+                List<BoardGamePlayData> listByMonth = new (list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year)));
+                if (listByMonth.Count != 0)
+                {
+                    var result = listByMonth
+                    .GroupBy(i => i.BoardGameName)
                 .GroupBy(g => g.Count())
                 .OrderByDescending(g => g.Key)
                 .First()
                 .Select(g => g.Key)
                 .ToArray();
 
-
-            
-            return result;
+                    return result;
+                }
+                return null;
+            }
+            return null;
         }
+
         public BoardGame GetBGByBGId(string boardGameid)
         {
-            var sqlCmdBoardGame = $"SELECT * FROM {_board_game_table} WHERE id=@id";
-
-            MySqlDataAdapter daBoardGame = new(sqlCmdBoardGame, conn);
-
-            daBoardGame.SelectCommand.CommandType = CommandType.Text;
-            daBoardGame.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = boardGameid;
-
-            DataTable dtBoardGame = new();
-            daBoardGame.Fill(dtBoardGame);
-            var y = dtBoardGame.AsEnumerable().FirstOrDefault();
-
-            if (y is null) return null;
-
-            return new BoardGame
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
-                ID = (string)y["id"],
-                GameType = (string)y["gameType"],
-                Name = (string)y["name"],
-                OrganisationId = (string)y["fk_organisationId"],
-            };
+                c.Open();
+                var sqlCmdBoardGame = $"SELECT * FROM {_board_game_table} WHERE id=@id";
+
+                using ( MySqlDataAdapter daBoardGame = new(sqlCmdBoardGame, c))
+                {
+                    daBoardGame.SelectCommand.CommandType = CommandType.Text;
+                    daBoardGame.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = boardGameid;
+
+                    DataTable dtBoardGame = new();
+                    daBoardGame.Fill(dtBoardGame);
+                    var y = dtBoardGame.AsEnumerable().FirstOrDefault();
+
+                    if (y is null) return null;
+
+                    return new BoardGame
+                    {
+                        ID = (string)y["id"],
+                        GameType = (string)y["gameType"],
+                        Name = (string)y["name"],
+                        OrganisationId = (string)y["fk_organisationId"],
+                    };
+                }
+            }
         }
         public BGPlayer[] GetBGPlayersByBGId(string playedGameId)
         {
@@ -140,20 +176,25 @@ namespace Portal.DBMethods
         }
         public string[] GetBGPlayersUsernamesByBGId(string playedGameId)
         {
-            var sqlCmdBoardGame = $"SELECT * FROM {_board_game_player_table} WHERE fk_playedGameId=@fk_playedGameId";
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
+            {
+                c.Open();
+                var sqlCmd = $"SELECT * FROM {_board_game_player_table} WHERE fk_playedGameId=@fk_playedGameId";
 
-            MySqlDataAdapter daBoardGame = new(sqlCmdBoardGame, conn);
+                using (MySqlDataAdapter da = new(sqlCmd, c))
+                {
+                    da.SelectCommand.CommandType = CommandType.Text;
+                    da.SelectCommand.Parameters.Add("@fk_playedGameId", MySqlDbType.VarChar).Value = playedGameId;
 
-            daBoardGame.SelectCommand.CommandType = CommandType.Text;
-            daBoardGame.SelectCommand.Parameters.Add("@fk_playedGameId", MySqlDbType.VarChar).Value = playedGameId;
+                    DataTable dtBoardGame = new();
+                    da.Fill(dtBoardGame);
+                    var y = dtBoardGame.AsEnumerable();
 
-            DataTable dtBoardGame = new();
-            daBoardGame.Fill(dtBoardGame);
-            var y = dtBoardGame.AsEnumerable();
-
-            if (y is null) return null;
-            var res = y.Select(u => (string)u["nickname"]).ToArray();
-            return res;
+                    if (y is null) return null;
+                    var res = y.Select(u => (string)u["nickname"]).ToArray();
+                    return res;
+                }
+            }
         }
 
         private int GetPlayersCountByPlayedGameID(string gamePlayId)

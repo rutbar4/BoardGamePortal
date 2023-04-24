@@ -82,9 +82,49 @@ namespace Portal.Controllers
                 }
             }
             var result = _boardGamePlayDBOperations.GetTopMonthPlayer(list, month);
-            
-            var count = list.Count(l => l.Winner == result[0]);
-            return Ok(new {Players = string.Join(", ", result), WinCount = count});
+
+            if (result is not null)
+            {
+                var count = list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year))
+                    .Count(l => l.Winner == result[0]);
+
+                return Ok(new { Players = string.Join(", ", result), WinCount = count });
+            }
+            return Ok(new { BoardGames = "", Count = "" });
+        }
+
+        [HttpPost]
+        [Route("TopMonthBoardGames/{organisationId}")]
+        public IActionResult GetTopMonthBG(string organisationId, [FromBody] DateTime month)
+        {
+
+            if (organisationId is null)
+                return BadRequest("Invalid request body");
+
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
+            var list = new List<BoardGamePlayData>();
+            foreach (var play in boardGames)
+            {
+                if (play is not null)
+                {
+                    var i = _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(play.ID);
+                    if (i is not null)
+                        foreach (var j in i)
+                        {
+                            list.Add(j);
+                        }
+                }
+            }
+
+            var result = _boardGamePlayDBOperations.GetTopMonthGame(list, month);
+            if (result is not null)
+            {
+                var count = list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year))
+                    .Count(l => l.BoardGameName == result[0]);
+
+                return Ok(new { BoardGames = string.Join(", ", result), Count = count });
+            }
+            return Ok(new { BoardGames = "", Count = "" });
         }
 
         [HttpGet]

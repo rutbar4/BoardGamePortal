@@ -9,7 +9,7 @@ namespace Portal.DBMethods
     {
         MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
         private const string _user_table = "user";
-        private const string login_table = "login";
+        private const string _login_table = "login";
 
         internal void InsertUser(User model)
         {
@@ -25,7 +25,7 @@ namespace Portal.DBMethods
             cmd.Parameters.Add("@email", MySqlDbType.VarChar).Value = model.Email;
             cmd.ExecuteNonQuery();
 
-            var insertQuery2 = $"INSERT INTO {login_table} SET id=@id, password=@password, username=@username";
+            var insertQuery2 = $"INSERT INTO {_login_table} SET id=@id, password=@password, username=@username";
             cmd.CommandText = insertQuery2;
             cmd.Parameters.Add("@password", MySqlDbType.VarChar).Value = model.Password;
             cmd.ExecuteNonQuery();
@@ -54,6 +54,31 @@ namespace Portal.DBMethods
                 Username = (string)row["username"],
                 Email = (string)row["email"],
             };
+        }
+
+        public void UpdateUser(User? user)
+        {
+            conn.Open();
+            MySqlCommand cmd = conn.CreateCommand();
+            cmd.Connection = conn;
+
+            if (user is null)
+                throw new Exception("Organisation was null");
+
+            var updateQuery = $"UPDATE {_user_table} SET name=@name, email=@email WHERE id=@id";
+            cmd.CommandText = updateQuery;
+            cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = user.ID;
+            cmd.Parameters.Add("@name", MySqlDbType.VarChar).Value = user.Name;
+            cmd.Parameters.Add("@email", MySqlDbType.VarChar).Value = user.Email;
+            cmd.ExecuteNonQuery();
+
+
+            var updatePass = $"UPDATE {_login_table} SET password=@password WHERE id=@id";
+            cmd.CommandText = updatePass;
+            cmd.Parameters.Add("@password", MySqlDbType.VarChar).Value = user.Password;
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
         }
     }
 }
