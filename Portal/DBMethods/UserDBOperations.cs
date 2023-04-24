@@ -38,21 +38,30 @@ namespace Portal.DBMethods
                 return null;
 
             var sqlCmd = $"SELECT * FROM {_user_table} WHERE id=@id";
+            var sqlCmdpass = $"SELECT * FROM {_login_table} WHERE id=@id";
 
             var da = new MySqlDataAdapter(sqlCmd, conn);
+            var dapass = new MySqlDataAdapter(sqlCmdpass, conn);
 
             da.SelectCommand.CommandType = CommandType.Text;
             da.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = id;
 
+            dapass.SelectCommand.CommandType = CommandType.Text;
+            dapass.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = id;
+
             var dt = new DataTable();
+            var dtpass = new DataTable();
             da.Fill(dt);
+            dapass.Fill(dtpass);
             var row = dt.AsEnumerable().FirstOrDefault();
+            var rowpass = dtpass.AsEnumerable().FirstOrDefault();
             return new User
             {
                 ID = (string)row["id"],
                 Name = (string)row["name"],
                 Username = (string)row["username"],
                 Email = (string)row["email"],
+                Password= (string)rowpass["password"],
             };
         }
 
