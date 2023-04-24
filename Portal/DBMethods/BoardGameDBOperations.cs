@@ -73,48 +73,63 @@ namespace Portal.DBMethods
             if (boardGameid is null)
                 return null;
 
-            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE id=@id";
-
-            MySqlDataAdapter da = new(sqlCmd, conn);
-
-            da.SelectCommand.CommandType = CommandType.Text;
-            da.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = boardGameid;
-
-            DataTable dt = new();
-            da.Fill(dt);
-            var row = dt.AsEnumerable().FirstOrDefault();
-
-            return new BoardGame
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
-                ID = (string)row["id"],
-                Name = (string)row["name"],
-                GameType = (string)row["gameType"]
-            };
+                c.Open();
+
+                var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE id=@id";
+
+                using (MySqlDataAdapter da = new(sqlCmd, c))
+                {
+
+
+                    da.SelectCommand.CommandType = CommandType.Text;
+                    da.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = boardGameid;
+
+                    DataTable dt = new();
+                    da.Fill(dt);
+                    var row = dt.AsEnumerable().FirstOrDefault();
+
+                    return new BoardGame
+                    {
+                        ID = (string)row["id"],
+                        Name = (string)row["name"],
+                        GameType = (string)row["gameType"]
+                    };
+                }
+            }
         }
+
         public List<BoardGame> GetAllBGByOrganisation(string? organisationid)
         {
             if (organisationid is null)
                 return null;
 
-            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid";
-
-            MySqlDataAdapter da = new(sqlCmd, conn);
-
-            da.SelectCommand.CommandType = CommandType.Text;
-            da.SelectCommand.Parameters.Add("@organisationid", MySqlDbType.VarChar).Value = organisationid;
-
-
-            DataTable dt = new();
-            da.Fill(dt);
-            var rows = dt.AsEnumerable().Select(row => new BoardGame
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
-                ID = (string)row["id"],
-                Name = (string)row["name"],
-                GameType = (string)row["gameType"]
-            }).ToList();
+                c.Open();
+                var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@organisationid";
 
-            return rows;
+                using (MySqlDataAdapter da = new(sqlCmd, c))
+                {
+                    da.SelectCommand.CommandType = CommandType.Text;
+                    da.SelectCommand.Parameters.Add("@organisationid", MySqlDbType.VarChar).Value = organisationid;
+
+
+                    DataTable dt = new();
+                    da.Fill(dt);
+                    var rows = dt.AsEnumerable().Select(row => new BoardGame
+                    {
+                        ID = (string)row["id"],
+                        Name = (string)row["name"],
+                        GameType = (string)row["gameType"]
+                    }).ToList();
+
+                    return rows;
+                }
+            }
         }
+
         internal string GetBGId(BoardGamePlayData boardGamePlayData)
         {
             var organisation = GetOrganisation(boardGamePlayData.Organisation);

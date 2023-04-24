@@ -34,6 +34,7 @@ namespace Portal.Controllers
 
             return Ok();
         }
+
         [HttpGet]
         [Route("AllPlaysByOrganisationId/{organisationId}")]
         public IActionResult GetAllPlaysByOrganisationId(string organisationId)
@@ -57,6 +58,55 @@ namespace Portal.Controllers
             }
 
             return Ok(list);
+        }
+
+        [HttpPost]
+        [Route("TopMonthPlayers/{organisationId}")]
+        public IActionResult GetTopMonthPlayers(string organisationId, [FromBody] DateTime month)
+        {
+
+            if (organisationId is null)
+                return BadRequest("Invalid request body");
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
+            var list = new List<BoardGamePlayData>();
+            foreach (var play in boardGames)
+            {
+                if (play is not null)
+                {
+                    var i = _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(play.ID);
+                    if (i is not null)
+                        foreach (var j in i)
+                        {
+                            list.Add(j);
+                        }
+                }
+            }
+            var result = _boardGamePlayDBOperations.GetTopMonthPlayer(list, month);
+            
+            var count = list.Count(l => l.Winner == result[0]);
+            return Ok(new {Players = string.Join(", ", result), WinCount = count});
+        }
+
+        [HttpGet]
+        [Route("BGPlaysCountbyOrganisationId/Top10/{organisationId}")]
+        public IActionResult GetTop10BGPlaysCountbyOrganisationId(string organisationId) //+send max count
+        {
+            if (organisationId is null)
+                return BadRequest("Invalid request body");
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
+            var list = new List<BoardGamePlayCount>();
+            foreach (var play in boardGames)
+            {
+                if (play is not null)
+                {
+                    var count = _boardGamePlayDBOperations.GetBGPlayCount(play.ID);
+                    var name = _boardGameDBOperations.GetBGByBDId(play.ID).Name;
+                    if (count != 0)
+                    list.Add(new BoardGamePlayCount { BoardGameName = name, PlayCount = count});
+                }
+            }
+            
+            return Ok(list.OrderByDescending(p => p.PlayCount).Take(10));
         }
 
         [HttpPost]
