@@ -25,6 +25,7 @@ namespace Portal.Controllers
             BoardGamePlayData? boardGamePlayData = JsonConvert.DeserializeObject<BoardGamePlayData>(requestBody.ToString());
             if (boardGamePlayData is null)
                 return BadRequest("Invalid request body");
+
             string bgId = _boardGameDBOperations.GetBGId(boardGamePlayData);
 
             var players = new BoardGamePlayers(boardGamePlayData.BoardGameName, boardGamePlayData.Players, boardGamePlayData.ID);
@@ -59,7 +60,30 @@ namespace Portal.Controllers
 
             return Ok(list);
         }
+        [HttpGet]
+        [Route("AllPlaysByUserId/{userId}")]
+        public IActionResult GetAllPlaysByUserId(string userId)
+        {
+            if (userId is null)
+                return BadRequest("Invalid request body");
+            var boardGames = _boardGameDBOperations.GetAllBGByUserId(userId);
+            //var plays = boardGames.Where(s => s is not null).Select(s => _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(s.ID)).ToList();
+            var list = new List<BoardGamePlayData>();
+            foreach (var play in boardGames)
+            {
+                if (play is not null)
+                {
+                    var i = _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(play.ID);
+                    if (i is not null)
+                        foreach (var j in i)
+                        {
+                            list.Add(j);
+                        }
+                }
+            }
 
+            return Ok(list);
+        }
         [HttpPost]
         [Route("TopMonthPlayers/{organisationId}")]
         public IActionResult GetTopMonthPlayers(string organisationId, [FromBody] DateTime month)
@@ -191,6 +215,14 @@ namespace Portal.Controllers
         public IActionResult GetAllBoardGamesNamesByOrganisation(string organisationName)
         {
             var boardGames = _boardGameDBOperations.GetAllBoardGamesNamesByOrganisationName(organisationName);
+
+            return Ok(boardGames);
+        }
+        [HttpGet]
+        [Route("GetBGByUserId/{userId}")]
+        public IActionResult GetAllBoardGamesNamesByUser(string userId)
+        {
+            var boardGames = _boardGameDBOperations.GetAllBoardGamesNamesByUserID(userId);
 
             return Ok(boardGames);
         }

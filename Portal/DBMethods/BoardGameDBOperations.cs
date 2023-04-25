@@ -11,23 +11,30 @@ namespace Portal.DBMethods
         private const string _played_game_table = "played_game";
         private const string _board_game_table = "board_game";
         private const string _organisation_table = "organisation";
+        private const string _user_table = "user";
         private const string _board_game_player_table = "board_game_player";
         internal string[] GetAllBoardGamesNamesByOrganisationName(string organisationName)
         {
-            var orgId = GetOrganisationId(organisationName);
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
+            {
+                c.Open();
 
-            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@orgId";
+                var orgId = GetOrganisationId(organisationName);
 
-            var da = new MySqlDataAdapter(sqlCmd, conn);
+                var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@orgId";
 
-            da.SelectCommand.CommandType = CommandType.Text;
-            da.SelectCommand.Parameters.Add("@orgId", MySqlDbType.VarChar).Value = orgId;
+                using (MySqlDataAdapter da = new(sqlCmd, c))
+                {
+                    da.SelectCommand.CommandType = CommandType.Text;
+                    da.SelectCommand.Parameters.Add("@orgId", MySqlDbType.VarChar).Value = orgId;
 
-            var dt = new DataTable();
-            da.Fill(dt);
-            var boardGames = dt.AsEnumerable().Select(r => (string)r["name"]).ToArray();
+                    var dt = new DataTable();
+                    da.Fill(dt);
+                    var boardGames = dt.AsEnumerable().Select(r => (string)r["name"]).ToArray();
 
-            return boardGames;
+                    return boardGames;
+                }
+            }
         }
         internal string[] GetAllOrganisationsNames()
         {
@@ -129,10 +136,66 @@ namespace Portal.DBMethods
                 }
             }
         }
+        public List<BoardGame> GetAllBGByUserId(string? userid)///reiktaisyt
+        {
+            if (userid is null)
+                return null;
+
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
+            {
+                c.Open();
+                var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@userid";
+
+                using (MySqlDataAdapter da = new(sqlCmd, c))
+                {
+                    da.SelectCommand.CommandType = CommandType.Text;
+                    da.SelectCommand.Parameters.Add("@userid", MySqlDbType.VarChar).Value = userid;
+
+                    DataTable dt = new();
+                    da.Fill(dt);
+                    var rows = dt.AsEnumerable().Select(row => new BoardGame
+                    {
+                        ID = (string)row["id"],
+                        Name = (string)row["name"],
+                        GameType = (string)row["gameType"]
+                    }).ToList();
+
+                    return rows;
+                }
+            }
+        }
+        internal string[] GetAllBoardGamesNamesByUserID(string userId)
+        {
+            var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@orgId";
+
+            var da = new MySqlDataAdapter(sqlCmd, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@orgId", MySqlDbType.VarChar).Value = userId;
+
+            var dt = new DataTable();
+            da.Fill(dt);
+            var boardGames = dt.AsEnumerable().Select(r => (string)r["name"]).ToArray();
+
+            return boardGames;
+        }
 
         internal string GetBGId(BoardGamePlayData boardGamePlayData)
         {
             var organisation = GetOrganisation(boardGamePlayData.Organisation);
+            if (organisation is null)
+            {
+                var user = GetUser(boardGamePlayData.Organisation);
+                var bgu = GetBGbyOrgIdAndBGName(user.ID, boardGamePlayData.BoardGameName);
+                return bgu.ID;
+            }
+
+            var bg = GetBGbyOrgIdAndBGName(organisation.ID, boardGamePlayData.BoardGameName);
+            return bg.ID;
+        }
+        internal string GetBGIdByUser(BoardGamePlayData boardGamePlayData)
+        {
+            var organisation = GetUser(boardGamePlayData.Organisation);
             var bg = GetBGbyOrgIdAndBGName(organisation.ID, boardGamePlayData.BoardGameName);
             return bg.ID;
         }
@@ -202,7 +265,29 @@ namespace Portal.DBMethods
             var dt = new DataTable();
             da.Fill(dt);
             var row = dt.AsEnumerable().FirstOrDefault();
+            if (row is null) return null; 
             return new Organisation
+            {
+                ID = (string)row["id"],
+                Name = (string)row["name"]
+            };
+        }
+        public User GetUser(string? name)
+        {
+            if (name is null)
+                return null;
+
+            var sqlCmd = $"SELECT * FROM {_user_table} WHERE name=@name";
+
+            var da = new MySqlDataAdapter(sqlCmd, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@name", MySqlDbType.VarChar).Value = name;
+
+            var dt = new DataTable();
+            da.Fill(dt);
+            var row = dt.AsEnumerable().FirstOrDefault();
+            return new User
             {
                 ID = (string)row["id"],
                 Name = (string)row["name"]
@@ -213,19 +298,26 @@ namespace Portal.DBMethods
         {
             if (organisationName is null)
                 return null;
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
+            {
+                c.Open();
+                var sqlCmd = $"SELECT * FROM {_organisation_table} WHERE name=@organisationName";
 
-            var sqlCmd = $"SELECT * FROM {_organisation_table} WHERE name=@organisationName";
+                using (MySqlDataAdapter da = new(sqlCmd, c))
+                {
 
-            var da = new MySqlDataAdapter(sqlCmd, conn);
 
-            da.SelectCommand.CommandType = CommandType.Text;
-            da.SelectCommand.Parameters.Add("@organisationName", MySqlDbType.VarChar).Value = organisationName;
+                    da.SelectCommand.CommandType = CommandType.Text;
+                    da.SelectCommand.Parameters.Add("@organisationName", MySqlDbType.VarChar).Value = organisationName;
 
-            var dt = new DataTable();
-            da.Fill(dt);
-            var row = dt.AsEnumerable().FirstOrDefault();
-            return (string)row["id"];
+                    var dt = new DataTable();
+                    da.Fill(dt);
+                    var row = dt.AsEnumerable().FirstOrDefault();
+                    return (string)row["id"];
+                }
+            }
         }
+
         internal void DeleteBGOfOrganisation(string boardGameId)
         {
             conn.Open();
@@ -268,7 +360,10 @@ namespace Portal.DBMethods
             cmd.Parameters.Add("@playerWinner", MySqlDbType.VarChar).Value = model.Winner;
             cmd.Parameters.Add("@timePlayed", MySqlDbType.DateTime).Value = new DateTime(1000, 1, 1, int.Parse(model.Time_h), int.Parse(model.Time_m), 0);
             cmd.Parameters.Add("@winnerpoints", MySqlDbType.Int32).Value = model.WinnerPoints;
+            if(model.DatePlayed is not null)
             cmd.Parameters.Add("@datePlayed", MySqlDbType.DateTime).Value = model.DatePlayed;
+            else
+                cmd.Parameters.Add("@datePlayed", MySqlDbType.DateTime).Value = DateTime.Today;
             cmd.ExecuteNonQuery();
 
             conn.Close();
