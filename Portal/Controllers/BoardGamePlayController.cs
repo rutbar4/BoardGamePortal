@@ -11,11 +11,15 @@ namespace Portal.Controllers
     {
         private readonly BoardGameDBOperations _boardGameDBOperations;
         private readonly BoardGamePlayDBOperations _boardGamePlayDBOperations;
+        private readonly UserDBOperations _userDBOperations;
+        private readonly OrganisationDBOperations _organisationDBOperations;
 
-        public BoardGamePlayController(BoardGameDBOperations boardGameDBOperations, BoardGamePlayDBOperations boardGamePlayDBOperations)
+        public BoardGamePlayController(BoardGameDBOperations boardGameDBOperations, BoardGamePlayDBOperations boardGamePlayDBOperations, UserDBOperations userDBOperations, OrganisationDBOperations organisationDBOperations)
         {
             _boardGameDBOperations = boardGameDBOperations;
             _boardGamePlayDBOperations = boardGamePlayDBOperations;
+            _userDBOperations = userDBOperations;
+            _organisationDBOperations = organisationDBOperations;
         }
 
         [HttpPost]
@@ -28,9 +32,44 @@ namespace Portal.Controllers
 
             string bgId = _boardGameDBOperations.GetBGId(boardGamePlayData);
 
-            var players = new BoardGamePlayers(boardGamePlayData.BoardGameName, boardGamePlayData.Players, boardGamePlayData.ID);
+            //check if username has @, if doeas call register with žusername, if that account exists, if not ignore @ everywhere and not add play
+            List<string> playersList = new();
+            foreach (var player in boardGamePlayData.Players)
+            {
+                if (player.Substring(0, 1) == "@")
+                {
+                    playersList.Add(player.Substring(1));
+                } 
+            }//cleanPlayers make method
 
-            _boardGameDBOperations.InsertBGPlayers(players);
+            var allplayers = playersList.ToArray();
+
+            foreach (var player in boardGamePlayData.Players)
+            {
+                if (player.Substring(0, 1) == "@")
+                {
+                    playersList.Add(player.Substring(1));
+                    if (_userDBOperations.UserExistsByUserName(player.Substring(1)))
+                        _boardGameDBOperations.InsertBGPlayData(new BoardGamePlayData
+                        {
+                            BoardGameName = boardGamePlayData.BoardGameName,
+                            BoardGameType = boardGamePlayData.BoardGameType,
+                            DatePlayed = boardGamePlayData.DatePlayed,
+                            BoardGameID = boardGamePlayData.BoardGameID,
+                            Organisation = player,
+                            Time_h = boardGamePlayData.Time_h,
+                            Time_m = boardGamePlayData.Time_m,
+                            Winner = boardGamePlayData.Winner,
+                            WinnerPoints = boardGamePlayData.WinnerPoints,//prie stalo ziaimo pasilieka org id ir įsiraso tas pats du kartus todėl. reikia kitofieldo arba kitos lentelės
+                            Players = allplayers,
+                        }, bgId);
+                }
+            }
+
+            var players = new BoardGamePlayers(boardGamePlayData.BoardGameName, allplayers, boardGamePlayData.ID);
+
+
+            _boardGameDBOperations.InsertBGPlayers(players);//look if it is usefull to have
             _boardGameDBOperations.InsertBGPlayData(boardGamePlayData, bgId);
 
             return Ok();
@@ -43,7 +82,6 @@ namespace Portal.Controllers
             if (organisationId is null)
                 return BadRequest("Invalid request body");
             var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
-            //var plays = boardGames.Where(s => s is not null).Select(s => _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(s.ID)).ToList();
             var list = new List<BoardGamePlayData>();
             foreach (var play in boardGames)
             {
@@ -203,7 +241,7 @@ namespace Portal.Controllers
 
         [HttpGet]
         [Route("GetAllOrganisationsNames")]
-        public IActionResult GetAllOrganisations()
+        public IActionResult GetAllOrganisationsNames()
         {
             var organisations = _boardGameDBOperations.GetAllOrganisationsNames();
 
@@ -211,13 +249,23 @@ namespace Portal.Controllers
         }
 
         [HttpGet]
-        [Route("GetBGByOrganisation/{organisationName}")]
+        [Route("AllOrganisations")]
+        public IActionResult GetAllOrganisations()
+        {
+            var organisations = _boardGameDBOperations.GetAllOrganisations();
+
+            return Ok(organisations);
+        }
+
+        [HttpGet]
+        [Route("GetBGByOrganisation/{organisationName}")]//BGnames
         public IActionResult GetAllBoardGamesNamesByOrganisation(string organisationName)
         {
             var boardGames = _boardGameDBOperations.GetAllBoardGamesNamesByOrganisationName(organisationName);
 
             return Ok(boardGames);
         }
+
         [HttpGet]
         [Route("GetBGByUserId/{userId}")]
         public IActionResult GetAllBoardGamesNamesByUser(string userId)
@@ -228,10 +276,20 @@ namespace Portal.Controllers
         }
 
         [HttpGet]
-        [Route("GetAllBGDataByOrganisation/{organisationID}")]
+        [Route("GetAllBGDataByOrganisation/{organisationID}")]//organisationID
         public IActionResult GetAllDataBoardGameByOrganisation(string organisationID)
         {
             var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationID);
+
+            return Ok(boardGames);
+        }
+
+        [HttpGet]
+        [Route("GetAllBGDataByOrganisationName/{organisationName}")]
+        public IActionResult GetAllDataBoardGameByOrganisationName(string organisationName)
+        {
+            var orgId = _organisationDBOperations.GetOrganisationIdByName(organisationName);
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(orgId);
 
             return Ok(boardGames);
         }

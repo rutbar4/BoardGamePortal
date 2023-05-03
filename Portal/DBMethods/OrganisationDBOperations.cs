@@ -79,6 +79,27 @@ namespace Portal.DBMethods
                 Description = DBUtils.ConvertFromDBVal<string>(row["description"]),
             };
         }
+
+        public string GetOrganisationIdByName(string? orgName)
+        {
+            if (orgName is null)
+                throw new Exception("orgName was null");
+
+            var sqlCmd = $"SELECT id FROM {_organisation_table} WHERE name=@name";
+
+            var da = new MySqlDataAdapter(sqlCmd, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@name", MySqlDbType.VarChar).Value = orgName;
+
+            var dt = new DataTable();
+            da.Fill(dt);
+
+            var row = dt.AsEnumerable().FirstOrDefault();
+            if (row is null) return null;
+            return (string)row["id"];
+        }
+
         public void UpdateOrganisation(Organisation? organisation)
         {
             conn.Open();

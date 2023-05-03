@@ -32,7 +32,7 @@ namespace Portal.DBMethods
 
             conn.Close();
         }
-        public User GetUser(string? id)
+        public User GetUserById(string? id)
         {
             if (id is null)
                 return null;
@@ -63,6 +63,35 @@ namespace Portal.DBMethods
                 Email = (string)row["email"],
                 Password= (string)rowpass["password"],
             };
+        }
+        public bool UserExistsByUserName(string? username)
+        {
+            if (username is null)
+                return false;
+
+            var sqlCmd = $"SELECT * FROM {_user_table} WHERE username=@username";
+            var sqlCmdpass = $"SELECT * FROM {_login_table} WHERE username=@username";
+
+            var da = new MySqlDataAdapter(sqlCmd, conn);
+            var dapass = new MySqlDataAdapter(sqlCmdpass, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@username", MySqlDbType.VarChar).Value = username;
+
+            dapass.SelectCommand.CommandType = CommandType.Text;
+            dapass.SelectCommand.Parameters.Add("@username", MySqlDbType.VarChar).Value = username;
+
+            var dt = new DataTable();
+            var dtpass = new DataTable();
+            da.Fill(dt);
+            dapass.Fill(dtpass);
+            
+            var row = dt.AsEnumerable().FirstOrDefault();
+            if (row is null) return false;
+            var rowpass = dtpass.AsEnumerable().FirstOrDefault();
+            if(rowpass is null) return false;
+
+            return true;
         }
 
         public void UpdateUser(User? user)

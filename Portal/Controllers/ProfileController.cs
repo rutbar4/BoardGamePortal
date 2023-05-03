@@ -38,7 +38,7 @@ namespace Portal.Controllers
                 var userDBOperations = new UserDBOperations();
                 var response = new
                 {
-                    User = userDBOperations.GetUser(userId)
+                    User = userDBOperations.GetUserById(userId)
                 };
 
                 return Ok(response);

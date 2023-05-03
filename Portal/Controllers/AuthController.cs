@@ -55,7 +55,7 @@ namespace Portal.Controllers
                 var response = new
                 {
                     Token = new JwtSecurityTokenHandler().WriteToken(token),
-                    User = _userDBOperations.GetUser(id)
+                    User = _userDBOperations.GetUserById(id)
                 };
 
                 return Ok(response);
