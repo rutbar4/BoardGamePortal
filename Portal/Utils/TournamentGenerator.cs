@@ -48,30 +48,65 @@ namespace Portal.Utils
 
                     if (playersQueue.Count == 0)//fill the rest of the tournament table with empty cells
                     {
-                        TournamentMatch emptyRunoff1 = new TournamentMatch { ID = "Runoff1_null_" + match.ID, NextMatchId = match.ID, PlayerA = new TournamentParticipant { Name = "-" }, PlayerB = new TournamentParticipant { Name = "-" } };
-                        TournamentMatch emptyRunoff2 = new TournamentMatch { ID = "Runoff2_null_" + match.ID, NextMatchId = match.ID, PlayerA = new TournamentParticipant { Name = "-" }, PlayerB = new TournamentParticipant { Name = "-" } };
+                        TournamentMatch emptyRunoff1 = new TournamentMatch
+                        {
+                            ID = "Runoff1_null_" + match.ID,
+                            NextMatchId = match.ID,
+                            PlayerA = new TournamentParticipant { Name = "-" },
+                            PlayerB = new TournamentParticipant { Name = "-" },
+                            State = "PLAYED"
+                        };
+                        TournamentMatch emptyRunoff2 = new TournamentMatch
+                        {
+                            ID = "Runoff2_null_" + match.ID,
+                            NextMatchId = match.ID,
+                            PlayerA = new TournamentParticipant { Name = "-" },
+                            PlayerB = new TournamentParticipant { Name = "-" },
+                            State = "PLAYED"
+                        };
                         runoffsTournamentRound.Matches.Add(emptyRunoff1);
                         runoffsTournamentRound.Matches.Add(emptyRunoff2);
                         continue;
                     }
 
-                    TournamentMatch runoffMatch = new TournamentMatch { ID = "Runoff1_" + match.ID, NextMatchId = match.ID, PlayerA = match.PlayerA, PlayerB = match.PlayerB };
+                    TournamentMatch runoffMatch = new TournamentMatch
+                    {
+                        ID = "Runoff1_" + match.ID,
+                        NextMatchId = match.ID,
+                        PlayerA = match.PlayerA,
+                        PlayerB = match.PlayerB,
+                        State = "SCHEDULED"
+                    };
                     runoffsTournamentRound.Matches.Add(runoffMatch);
 
-                    if (playersQueue.Count == 1)
-                    {
-                        match.PlayerA = null;
-                        match.PlayerB = playersQueue.Dequeue();
-                        TournamentMatch emptyRunoff2 = new TournamentMatch { ID = "Runoff2_null_" + match.ID, NextMatchId = match.ID, PlayerA = new TournamentParticipant { Name = "-" }, PlayerB = new TournamentParticipant { Name = "-" } };
-                        runoffsTournamentRound.Matches.Add(emptyRunoff2);
-                        continue;
-                    }
-                    else if (playersQueue.Count > 1)
+                    if (playersQueue.Count > 1)
                     {
                         match.PlayerA = null;
                         match.PlayerB = null;
-                        TournamentMatch runoffMatch2 = new TournamentMatch { ID = "Runoff2_" + match.ID, NextMatchId = match.ID, PlayerA = playersQueue.Dequeue(), PlayerB = playersQueue.Dequeue() };
+                        TournamentMatch runoffMatch2 = new TournamentMatch
+                        {
+                            ID = "Runoff2_" + match.ID,
+                            NextMatchId = match.ID,
+                            PlayerA = playersQueue.Dequeue(),
+                            PlayerB = playersQueue.Dequeue(),
+                            State = "SCHEDULED"
+                        };
                         runoffsTournamentRound.Matches.Add(runoffMatch2);
+                        continue;
+                    }
+                    else if (playersQueue.Count == 1)
+                    {
+                        match.PlayerA = null;
+                        match.PlayerB = playersQueue.Dequeue();
+                        TournamentMatch emptyRunoff2 = new TournamentMatch
+                        {
+                            ID = "Runoff2_null_" + match.ID,
+                            NextMatchId = match.ID,
+                            PlayerA = new TournamentParticipant { Name = "-" },
+                            PlayerB = new TournamentParticipant { Name = "-" },
+                            State = "PLAYED"
+                        };
+                        runoffsTournamentRound.Matches.Add(emptyRunoff2);
                     }
                 }
 
@@ -95,7 +130,8 @@ namespace Portal.Utils
                     // if first round - result is known
                     round.Matches = new List<TournamentMatch>(){
                         new TournamentMatch() {
-                            NextMatchId = null
+                            NextMatchId = null,
+                            State = "SCHEDULED"
                         }
                     };
                 }
@@ -106,11 +142,13 @@ namespace Portal.Utils
                     {
                         round.Matches.Add(new TournamentMatch()
                         {
-                            NextMatchId = match.ID
+                            NextMatchId = match.ID,
+                            State = "SCHEDULED"
                         });
                         round.Matches.Add(new TournamentMatch()
                         {
-                            NextMatchId = match.ID
+                            NextMatchId = match.ID,
+                            State = "SCHEDULED"
                         });
                     }
                 }

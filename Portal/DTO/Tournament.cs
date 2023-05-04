@@ -10,5 +10,6 @@ namespace Portal.DTO
         public List<TournamentMatch> matches { get; set; }
         public string? Description { get; set; }
         public string? BoardGameId { get; set; }
+        public string? OrgansiationName { get; set; } = null;
     }
 }

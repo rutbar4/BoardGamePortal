@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+using Mysqlx.Crud;
 using Portal.DTO;
 using Portal.Utils;
 using System.Data;
@@ -12,6 +13,7 @@ namespace Portal.DBMethods
         private const string _tournament_table = "tournament";
         private const string _tournament_match_table = "tournament_match";
         private const string _tournament_player_table = "tournament_player";
+        private const string _organisation_table = "organisation";
 
         internal void InsertTournament(TournamentCreation model)
         {
@@ -101,7 +103,55 @@ namespace Portal.DBMethods
                 return tournaments;
             }
         }
+        internal List<Tournament> SelectAllTournaments()
+        {
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
+            {
+                c.Open();
+                List<Tournament> tournaments;
+                var selectTournamentMatchesCmd = $"SELECT * FROM {_tournament_table}";
+                using (MySqlDataAdapter da = new(selectTournamentMatchesCmd, c))
+                {
+                    da.SelectCommand.CommandType = CommandType.Text;
 
+                    DataTable dt = new();
+                    da.Fill(dt);
+                    tournaments = dt.AsEnumerable().Select(row => new Tournament
+                    {
+                        ID = (string)row["id"],
+                        Name = (string)row["name"],
+                        BoardGameId = DBUtils.ConvertFromDBVal<string>(row["fk_boardGame"]),
+                        Date = DBUtils.ConvertFromDBVal<DateTime>(row["date"]),
+                        Description = DBUtils.ConvertFromDBVal<string>(row["description"]),
+                        OrgansiationName = GetOrgNameByTournamentId((string)row["fk_organisationId"])
+                    }).ToList();
+                }
+
+                c.Close();
+                return tournaments;
+            }
+        }
+        internal string GetOrgNameByTournamentId(string orgId)
+        {
+            string orgName = null;
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
+            {
+                c.Open();
+                var selectTournamentMatchesCmd = $"SELECT * FROM {_organisation_table} WHERE id=@id";
+                using (MySqlDataAdapter da = new(selectTournamentMatchesCmd, c))
+                {
+                    da.SelectCommand.CommandType = CommandType.Text;
+                    da.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = orgId;
+
+                    DataTable dt = new();
+                    da.Fill(dt);
+                    var row = dt.AsEnumerable().First();
+                    orgName = (string)row["name"];
+                }
+                c.Close();
+                return orgName;
+            }
+        }
         internal Tournament SelectTournament(string tournamentId)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
@@ -122,7 +172,8 @@ namespace Portal.DBMethods
                         Name = (string)row["name"],
                         BoardGameId = DBUtils.ConvertFromDBVal<string>(row["fk_boardGame"]),
                         Date = DBUtils.ConvertFromDBVal<DateTime>(row["date"]),
-                        Description = DBUtils.ConvertFromDBVal<string>(row["description"])
+                        Description = DBUtils.ConvertFromDBVal<string>(row["description"]),
+                        OrgansiationName = GetOrgNameByTournamentId((string)row["fk_organisationId"])
                     }).First();
                 }
 
@@ -132,7 +183,76 @@ namespace Portal.DBMethods
                 return tournament;
             }
         }
+        internal string UpdateMatch(TourmanentMatchUpdate match)
+        {
+            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
+            {
+                //getMatch
+                c.Open();
+                TournamentMatch tournamentMatch;
+                string tournamentId;
+                var selectTournamentMatchesCmd = $"SELECT * FROM {_tournament_match_table} WHERE id=@Id";
+                using (MySqlDataAdapter da = new(selectTournamentMatchesCmd, c))
+                {
+                    da.SelectCommand.CommandType = CommandType.Text;
+                    da.SelectCommand.Parameters.Add("@Id", MySqlDbType.VarChar).Value = match.Id;
 
+                    DataTable dt = new();
+                    da.Fill(dt);
+                    tournamentMatch = dt.AsEnumerable().Select(row => new TournamentMatch
+                    {
+                        ID = (string)row["id"],
+                        NextMatchId = DBUtils.ConvertFromDBVal<string>(row["fk_nextMatchId"]),
+                        TournamentRoundText = (string)row["tournament_round"],
+                        State = DBUtils.ConvertFromDBVal<string>(row["state"])
+                    }).First();
+                    tournamentId = dt.AsEnumerable().Select(row => (string)row["fk_tournamentId"]).First();
+                }
+
+                //update match (set Done)
+                var UpdateMatchCmd = $"UPDATE {_tournament_match_table} SET state=@state WHERE id=@id";
+                var updateMatchCmd = c.CreateCommand();
+                updateMatchCmd.Connection = c;
+
+                updateMatchCmd.CommandText = UpdateMatchCmd;
+                updateMatchCmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = match.Id;
+                updateMatchCmd.Parameters.Add("@state", MySqlDbType.VarChar).Value = "PLAYED";
+                updateMatchCmd.ExecuteNonQuery();
+
+
+                //insert new match player
+                var selectTournamentParticipantsCmd = $"SELECT * FROM {_tournament_player_table} WHERE fk_tournamentId=@tournamentId";
+
+                var participantInsertCmd = c.CreateCommand();
+                participantInsertCmd.Connection = c;
+
+                if (tournamentMatch.NextMatchId != null) { 
+                var insertQuery = $"INSERT INTO {_tournament_player_table} SET id=@id, fk_tournamentId=@tournamentId, name=@name, fk_tournamentMatchId=@tournamentMatchId";
+                participantInsertCmd.CommandText = insertQuery;
+                participantInsertCmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = GuidUtils.GenerateGUID();
+                participantInsertCmd.Parameters.Add("@tournamentId", MySqlDbType.VarChar).Value = tournamentId;
+                participantInsertCmd.Parameters.Add("@name", MySqlDbType.VarChar).Value = match.WinnerName;
+                participantInsertCmd.Parameters.Add("@tournamentMatchId", MySqlDbType.VarChar).Value = tournamentMatch.NextMatchId;
+                participantInsertCmd.ExecuteNonQuery();}
+
+                //update old player
+                var UpdateCmd = $"UPDATE {_tournament_player_table} SET points=@points, ResultText=@ResultText WHERE fk_tournamentMatchId=@fk_tournamentMatchId AND name=@name";
+                var updateInsertCmd = c.CreateCommand();
+                updateInsertCmd.Connection = c;
+
+                updateInsertCmd.CommandText = UpdateCmd;
+                updateInsertCmd.Parameters.Add("@fk_tournamentMatchId", MySqlDbType.VarChar).Value = match.Id;
+                updateInsertCmd.Parameters.Add("@name", MySqlDbType.VarChar).Value = match.WinnerName;
+                updateInsertCmd.Parameters.Add("@points", MySqlDbType.VarChar).Value = match.WinnerPoints;
+                updateInsertCmd.Parameters.Add("@ResultText", MySqlDbType.VarChar).Value = "Won";
+                updateInsertCmd.ExecuteNonQuery();
+
+
+                c.Close();
+
+                return tournamentId;
+            }
+        }
         internal List<TournamentMatch> SelectTournamentMatches(string tournamentId)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))

@@ -37,6 +37,13 @@ namespace Portal.Controllers
             return Ok(tournaments);
         }
 
+        [HttpGet("organisation/AllTournaments")]
+        public IActionResult GetAllTournaments()
+        {
+            var tournaments = _tournamentDBOperations.SelectAllTournaments();
+            return Ok(tournaments);
+        }
+
         // POST api/<TournamentController>
         [HttpPost]
         public IActionResult Post([FromBody] TournamentCreation tournamentData)
@@ -50,6 +57,14 @@ namespace Portal.Controllers
             return base.Ok(tournamentData);
         }
 
+        [HttpPut]
+        [Route("UpdateMatch")]
+        public IActionResult UpdateMatch ([FromBody] TourmanentMatchUpdate tournamentMatchData)
+        {
+            string tournamentId = _tournamentDBOperations.UpdateMatch(tournamentMatchData);
+            var tournament = _tournamentDBOperations.SelectTournament(tournamentId);
+            return base.Ok(tournament);
+        }
         //// PUT api/<TournamentController>/5 //for winning points
         //[HttpPut("{id}")]
         //public void Put(int id, [FromBody] string tournamentMatches)
