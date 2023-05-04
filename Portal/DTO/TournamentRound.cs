@@ -4,6 +4,6 @@ namespace Portal.DTO
 {
     public class TournamentRound
     {
-        public List<Match> Matches { get; set; }
+        public List<TournamentMatch> Matches { get; set; }
     }
 }

@@ -4,8 +4,7 @@ namespace Portal.Utils
 {
     public class TournamentGenerator
     {
-
-        public static List<Match> Generate(List<TournamentParticipant> players)
+        public static List<TournamentMatch> Generate(List<TournamentParticipant> players)
         {
             Console.WriteLine("Generating table");
 
@@ -41,43 +40,39 @@ namespace Portal.Utils
             if (!playersFitInBracket)
             {
                 //Add new round, for runoffs
-                TournamentRound runoffsTournamentRound = new TournamentRound() { Matches = new List<Match>() };
+                TournamentRound runoffsTournamentRound = new TournamentRound() { Matches = new List<TournamentMatch>() };
 
                 for (var i = 0; i < firstRoundMatches.Count; i++)
                 {
                     var match = firstRoundMatches[i];
 
-                    if (playersQueue.Count == 0)
+                    if (playersQueue.Count == 0)//fill the rest of the tournament table with empty cells
                     {
-                        TournamentParticipant placeHolderPlayer = new TournamentParticipant { Name = "-" };
-                        Match emptyRunoff1 = new Match { ID = "Runoff1_null_" + match.ID, NextMatchId = match.ID, PlayerA = placeHolderPlayer, PlayerB = placeHolderPlayer };
-                        Match emptyRunoff2 = new Match { ID = "Runoff2_null_" + match.ID, NextMatchId = match.ID, PlayerA = placeHolderPlayer, PlayerB = placeHolderPlayer };
+                        TournamentMatch emptyRunoff1 = new TournamentMatch { ID = "Runoff1_null_" + match.ID, NextMatchId = match.ID, PlayerA = new TournamentParticipant { Name = "-" }, PlayerB = new TournamentParticipant { Name = "-" } };
+                        TournamentMatch emptyRunoff2 = new TournamentMatch { ID = "Runoff2_null_" + match.ID, NextMatchId = match.ID, PlayerA = new TournamentParticipant { Name = "-" }, PlayerB = new TournamentParticipant { Name = "-" } };
                         runoffsTournamentRound.Matches.Add(emptyRunoff1);
                         runoffsTournamentRound.Matches.Add(emptyRunoff2);
                         continue;
                     }
 
-
-                    Match runoffMatch = new Match { ID = "Runoff1_" + match.ID, NextMatchId = match.ID, PlayerA = match.PlayerA, PlayerB = match.PlayerB };
+                    TournamentMatch runoffMatch = new TournamentMatch { ID = "Runoff1_" + match.ID, NextMatchId = match.ID, PlayerA = match.PlayerA, PlayerB = match.PlayerB };
                     runoffsTournamentRound.Matches.Add(runoffMatch);
 
                     if (playersQueue.Count == 1)
                     {
                         match.PlayerA = null;
                         match.PlayerB = playersQueue.Dequeue();
+                        TournamentMatch emptyRunoff2 = new TournamentMatch { ID = "Runoff2_null_" + match.ID, NextMatchId = match.ID, PlayerA = new TournamentParticipant { Name = "-" }, PlayerB = new TournamentParticipant { Name = "-" } };
+                        runoffsTournamentRound.Matches.Add(emptyRunoff2);
                         continue;
                     }
                     else if (playersQueue.Count > 1)
                     {
                         match.PlayerA = null;
                         match.PlayerB = null;
-                        Match runoffMatch2 = new Match { ID = "Runoff2_" + match.ID, NextMatchId = match.ID, PlayerA = playersQueue.Dequeue(), PlayerB = playersQueue.Dequeue() };
+                        TournamentMatch runoffMatch2 = new TournamentMatch { ID = "Runoff2_" + match.ID, NextMatchId = match.ID, PlayerA = playersQueue.Dequeue(), PlayerB = playersQueue.Dequeue() };
                         runoffsTournamentRound.Matches.Add(runoffMatch2);
-                        if (playersQueue.Count == 0)
-                            continue;
                     }
-                    else
-                        continue;
                 }
 
                 emptyTableRounds.Add(runoffsTournamentRound);
@@ -98,26 +93,23 @@ namespace Portal.Utils
                 if (prevRound == null)
                 {
                     // if first round - result is known
-                    round.Matches = new List<Match>(){
-                        new Match() {
-                            ID = "M"+matchCounter++,
+                    round.Matches = new List<TournamentMatch>(){
+                        new TournamentMatch() {
                             NextMatchId = null
                         }
                     };
                 }
                 else
                 {
-                    round.Matches = new List<Match>(prevRound.Matches.Count * 2);
+                    round.Matches = new List<TournamentMatch>(prevRound.Matches.Count * 2);
                     foreach (var match in prevRound.Matches)
                     {
-                        round.Matches.Add(new Match()
+                        round.Matches.Add(new TournamentMatch()
                         {
-                            ID = "M" + matchCounter++,
                             NextMatchId = match.ID
                         });
-                        round.Matches.Add(new Match()
+                        round.Matches.Add(new TournamentMatch()
                         {
-                            ID = "M" + matchCounter++,
                             NextMatchId = match.ID
                         });
                     }

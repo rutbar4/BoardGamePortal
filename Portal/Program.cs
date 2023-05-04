@@ -20,6 +20,7 @@ builder.Services.AddSingleton<BoardGameDBOperations>(new BoardGameDBOperations()
 builder.Services.AddSingleton<OrganisationDBOperations>(new OrganisationDBOperations());
 builder.Services.AddSingleton<UserDBOperations>(new UserDBOperations());
 builder.Services.AddSingleton<BoardGamePlayDBOperations>(new BoardGamePlayDBOperations());
+builder.Services.AddSingleton<TournamentDBO>(new TournamentDBO());
 
 builder.Services.AddCors(options =>
 {

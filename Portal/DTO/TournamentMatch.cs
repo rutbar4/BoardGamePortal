@@ -1,10 +1,13 @@
-﻿namespace Portal.DTO
+﻿using Portal.Utils;
+
+namespace Portal.DTO
 {
-    public class Match
+    public class TournamentMatch
     {
-        public string ID { get; set; }
+        public string ID { get; set; } = GuidUtils.GenerateGUID();
         public string? NextMatchId { get; set; }
         public string? TournamentRoundText { get; set; }
+        public string? State { get; set; } = string.Empty;
 
         public List<TournamentParticipant> participants
         {
