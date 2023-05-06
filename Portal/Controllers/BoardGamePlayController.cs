@@ -98,6 +98,59 @@ namespace Portal.Controllers
 
             return Ok(list);
         }
+
+        [HttpGet]
+        [Route("BGPlaysByOrganisationId/{organisationId}")]
+        public IActionResult GetBGPlaysByOrganisationId(string organisationId)
+        {
+            if (organisationId is null)
+                return BadRequest("Invalid request body");
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
+            var list = new List<BoardGamePlayData>();
+            foreach (var play in boardGames)
+            {
+                if (play is not null)
+                {
+                    var i = _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(play.ID);
+                    if (i is not null)
+                        foreach (var j in i)
+                        {
+                            list.Add(j);
+                        }
+                }
+            }
+
+            var boardGamelist = list
+                .GroupBy(p => p.BoardGameName)
+                .Select(g => new
+                {
+                    BoardGameName = g.Key,
+                    Count = g.Where(l => l.BoardGameName == (g.GroupBy(q => q.BoardGameName)
+                                                    .OrderByDescending(gp => gp.Count())
+                                                     .First().Key)).Count(),
+                    Record = g.Select(l => l.WinnerPoints).Max(),
+                    MostWinningPlayer = g.GroupBy(q => q.Winner)
+                                    .OrderByDescending(gp => gp.Count())
+                                    .First().Key,
+                    Wins = g.Where(l => l.Winner == (g.GroupBy(q => q.Winner)
+                                                    .OrderByDescending(gp => gp.Count())
+                                                     .First().Key)).Count(),
+                    MostActivePlayer = g.Where(i => i.Players.Count() > 0)?
+                                    .SelectMany(l => l.Players)
+                                    .GroupBy(name => name)
+                                    .OrderByDescending(gp => gp.Count())
+                                    .FirstOrDefault()?.Key,
+                    MostActivePlayerPlayCount = g.Where(l => l.Winner == (g.Where(i => i.Players.Count() > 0)?
+                                    .SelectMany(l => l.Players)
+                                    .GroupBy(name => name)
+                                    .OrderByDescending(gp => gp.Count())
+                                    .FirstOrDefault()?.Key)).Count(),
+                }) //could be added player who played the boardgame most (not necceserely wining)
+                .ToList();
+
+            return Ok(boardGamelist);
+        }
+
         [HttpGet]
         [Route("AllPlaysByUserId/{userId}")]
         public IActionResult GetAllPlaysByUserId(string userId)
