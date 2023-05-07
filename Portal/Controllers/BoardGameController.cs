@@ -39,5 +39,14 @@ namespace Portal.Controllers
 
             return Ok(boardGames);
         }
+
+        //[HttpPut]
+        //[Route("BGGGameId/{boardGameName}")]
+        //public IActionResult GetBGG(string boardGameName)
+        //{
+        //    var boardGames = _boardGameDBOperations.InsertBGGGameID(boardGameName);
+
+        //    return Ok(boardGames);
+        //}
     }
 }

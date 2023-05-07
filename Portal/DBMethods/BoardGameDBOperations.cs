@@ -13,6 +13,7 @@ namespace Portal.DBMethods
         private const string _organisation_table = "organisation";
         private const string _user_table = "user";
         private const string _board_game_player_table = "board_game_player";
+
         internal string[] GetAllBoardGamesNamesByOrganisationName(string organisationName)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
@@ -36,6 +37,7 @@ namespace Portal.DBMethods
                 }
             }
         }
+
         internal string[] GetAllOrganisationsNames()//perkelti į organizacijų kontrollerį
         {
             var sqlCmd = $"SELECT name FROM {_organisation_table}";
@@ -50,6 +52,7 @@ namespace Portal.DBMethods
 
             return names;
         }
+
         internal Organisation[] GetAllOrganisations()//perkelti į organizacijų kontrollerį //pabandyt su null
         {
             var sqlCmd = $"SELECT name, description, address, city, email FROM {_organisation_table}";
@@ -380,6 +383,7 @@ namespace Portal.DBMethods
             cmd.ExecuteNonQuery();
             conn.Close();
         }
+
         internal void InsertBGOfOrganisation(BoardGame model)
         {
             conn.Open();
@@ -396,6 +400,22 @@ namespace Portal.DBMethods
 
             conn.Close();
         }
+
+        internal void InsertBGGGameID(BoardGame model)
+        {
+            conn.Open();
+            MySqlCommand cmd = conn.CreateCommand();
+            cmd.Connection = conn;
+
+            var insertQuery = $"SELECT * FROM {_board_game_table} WHERE id=@id SET boardGameGeeksGameId=@boardGameGeeksGameId";
+            cmd.CommandText = insertQuery;
+            cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = model.ID;
+            cmd.Parameters.Add("@boardGameGeeksGameId", MySqlDbType.VarChar).Value = model.GameType;
+            cmd.ExecuteNonQuery();
+
+            conn.Close();
+        }
+
         internal void InsertBGPlayData(BoardGamePlayData model, string boardGameId)
         {
             conn.Open();
