@@ -71,7 +71,6 @@ namespace Portal.DBMethods
                 }
             }
 
-
             c.Close();
         }
 

@@ -32,6 +32,7 @@ namespace Portal.DBMethods
 
             conn.Close();
         }
+
         public User GetUserById(string? id)
         {
             if (id is null)
@@ -64,6 +65,28 @@ namespace Portal.DBMethods
                 Password= (string)rowpass["password"],
             };
         }
+
+        public string? GetUserIDByUserName(string? username)
+        {
+            if (username is null)
+                return null;
+
+            var sqlCmd = $"SELECT * FROM {_user_table} WHERE username=@username";
+
+            var da = new MySqlDataAdapter(sqlCmd, conn);
+
+            da.SelectCommand.CommandType = CommandType.Text;
+            da.SelectCommand.Parameters.Add("@username", MySqlDbType.VarChar).Value = username;
+
+            var dt = new DataTable();
+            da.Fill(dt);
+
+            var row = dt.AsEnumerable().FirstOrDefault();
+            if (row is null) return null;
+
+            return (string)row["id"];
+        }
+
         public bool UserExistsByUserName(string? username)
         {
             if (username is null)

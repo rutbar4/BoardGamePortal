@@ -16,7 +16,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IConfiguration>(configuration);
-builder.Services.AddSingleton<BoardGameDBOperations>(new BoardGameDBOperations());
+builder.Services.AddSingleton<BoardGameDBOperations>(new BoardGameDBOperations(new UserDBOperations()));
 builder.Services.AddSingleton<OrganisationDBOperations>(new OrganisationDBOperations());
 builder.Services.AddSingleton<UserDBOperations>(new UserDBOperations());
 builder.Services.AddSingleton<BoardGamePlayDBOperations>(new BoardGamePlayDBOperations());

@@ -32,44 +32,9 @@ namespace Portal.Controllers
 
             string bgId = _boardGameDBOperations.GetBGId(boardGamePlayData);
 
-            //check if username has @, if doeas call register with žusername, if that account exists, if not ignore @ everywhere and not add play
-            List<string> playersList = new();
-            foreach (var player in boardGamePlayData.Players)
-            {
-                if (player.Substring(0, 1) == "@")
-                {
-                    playersList.Add(player.Substring(1));
-                } 
-            }//cleanPlayers make method
+            var players = new BoardGamePlayers(boardGamePlayData.BoardGameName, boardGamePlayData.Players, boardGamePlayData.ID);
 
-            var allplayers = playersList.ToArray();
-
-            foreach (var player in boardGamePlayData.Players)
-            {
-                if (player.Substring(0, 1) == "@")
-                {
-                    playersList.Add(player.Substring(1));
-                    if (_userDBOperations.UserExistsByUserName(player.Substring(1)))
-                        _boardGameDBOperations.InsertBGPlayData(new BoardGamePlayData
-                        {
-                            BoardGameName = boardGamePlayData.BoardGameName,
-                            BoardGameType = boardGamePlayData.BoardGameType,
-                            DatePlayed = boardGamePlayData.DatePlayed,
-                            BoardGameID = boardGamePlayData.BoardGameID,
-                            Organisation = player,
-                            Time_h = boardGamePlayData.Time_h,
-                            Time_m = boardGamePlayData.Time_m,
-                            Winner = boardGamePlayData.Winner,
-                            WinnerPoints = boardGamePlayData.WinnerPoints,//prie stalo ziaimo pasilieka org id ir įsiraso tas pats du kartus todėl. reikia kitofieldo arba kitos lentelės
-                            Players = allplayers,
-                        }, bgId);
-                }
-            }
-
-            var players = new BoardGamePlayers(boardGamePlayData.BoardGameName, allplayers, boardGamePlayData.ID);
-
-
-            _boardGameDBOperations.InsertBGPlayers(players);//look if it is usefull to have
+            _boardGameDBOperations.InsertBGPlayers(players);
             _boardGameDBOperations.InsertBGPlayData(boardGamePlayData, bgId);
 
             return Ok();
@@ -100,12 +65,12 @@ namespace Portal.Controllers
         }
 
         [HttpGet]
-        [Route("BGPlaysByOrganisationId/{organisationId}")]
-        public IActionResult GetBGPlaysByOrganisationId(string organisationId)
+        [Route("BGPlaysByOrganisationId/{profileId}")]
+        public IActionResult GetBGPlaysByProfileId(string profileId)
         {
-            if (organisationId is null)
+            if (profileId is null)
                 return BadRequest("Invalid request body");
-            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
+            var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(profileId);
             var list = new List<BoardGamePlayData>();
             foreach (var play in boardGames)
             {
@@ -119,6 +84,11 @@ namespace Portal.Controllers
                         }
                 }
             }
+
+
+            var t = _boardGamePlayDBOperations.GetBGPlayUserIdWithPlayersCount(profileId);
+
+            list.AddRange(t);
 
             var boardGamelist = list
                 .GroupBy(p => p.BoardGameName)
@@ -140,12 +110,12 @@ namespace Portal.Controllers
                                     .GroupBy(name => name)
                                     .OrderByDescending(gp => gp.Count())
                                     .FirstOrDefault()?.Key,
-                    MostActivePlayerPlayCount = g.Where(l => l.Winner == (g.Where(i => i.Players.Count() > 0)?
+                    MostActivePlayerPlayCount = g.Where(i => i.Players.Count() > 0)?
                                     .SelectMany(l => l.Players)
                                     .GroupBy(name => name)
                                     .OrderByDescending(gp => gp.Count())
-                                    .FirstOrDefault()?.Key)).Count(),
-                }) //could be added player who played the boardgame most (not necceserely wining)
+                                    .FirstOrDefault()?.Count(),
+                }) 
                 .ToList();
 
             return Ok(boardGamelist);
@@ -173,6 +143,9 @@ namespace Portal.Controllers
                 }
             }
 
+            var t = _boardGamePlayDBOperations.GetBGPlayUserIdWithPlayersCount(userId);
+
+            list.AddRange(t);
             return Ok(list);
         }
         [HttpPost]
