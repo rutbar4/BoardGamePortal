@@ -77,7 +77,7 @@ app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/profile"), 
     appBuilder.UseMiddleware<JwtMiddleware>();
 }); 
 
-app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/BoardGamePlay"), appBuilder =>
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/BoardGamePlay/DeleteOrganisationBG"), appBuilder =>
 {
     appBuilder.UseMiddleware<JwtMiddleware>();
 });
