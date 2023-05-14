@@ -1,13 +1,12 @@
 ﻿using MySql.Data.MySqlClient;
 using Portal.DTO;
-using Portal.Utils;
 using System.Data;
 
 namespace Portal.DBMethods
 {
     public class UserDBOperations
     {
-        MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
+        private MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
         private const string _user_table = "user";
         private const string _login_table = "login";
 
@@ -62,7 +61,7 @@ namespace Portal.DBMethods
                 Name = (string)row["name"],
                 Username = (string)row["username"],
                 Email = (string)row["email"],
-                Password= (string)rowpass["password"],
+                Password = (string)rowpass["password"],
             };
         }
 
@@ -108,11 +107,11 @@ namespace Portal.DBMethods
             var dtpass = new DataTable();
             da.Fill(dt);
             dapass.Fill(dtpass);
-            
+
             var row = dt.AsEnumerable().FirstOrDefault();
             if (row is null) return false;
             var rowpass = dtpass.AsEnumerable().FirstOrDefault();
-            if(rowpass is null) return false;
+            if (rowpass is null) return false;
 
             return true;
         }
@@ -132,7 +131,6 @@ namespace Portal.DBMethods
             cmd.Parameters.Add("@name", MySqlDbType.VarChar).Value = user.Name;
             cmd.Parameters.Add("@email", MySqlDbType.VarChar).Value = user.Email;
             cmd.ExecuteNonQuery();
-
 
             var updatePass = $"UPDATE {_login_table} SET password=@password WHERE id=@id";
             cmd.CommandText = updatePass;

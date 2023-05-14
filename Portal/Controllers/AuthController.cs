@@ -14,10 +14,9 @@ namespace Portal.Controllers
     [Route("api/v1/[controller]")]
     public class AuthController : ControllerBase
     {
-        MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
-        private const string _user_login_table = "user_login";
+        private readonly MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
         private const string _login_table = "login";
-        IConfiguration _configuration;
+        private readonly IConfiguration _configuration;
         private readonly UserDBOperations _userDBOperations;
         private readonly OrganisationDBOperations _organisationDBOperations;
 
@@ -102,7 +101,7 @@ namespace Portal.Controllers
             if (user == null)
                 return BadRequest("Invalid request body");
 
-            _userDBOperations.InsertUser(user); 
+            _userDBOperations.InsertUser(user);
 
             var token = CreateJWTToken(user.ID, UserType.User);
 
@@ -135,6 +134,5 @@ namespace Portal.Controllers
 
             return Ok(response);
         }
-
     }
 }

@@ -8,8 +8,8 @@ namespace Portal.DTO
         Cooperative = 1,
         Solo = 2,
         TwoPlayer = 3
-
     }
+
     public class BoardGame
     {
         public string ID { get; set; } = GuidUtils.GenerateGUID();

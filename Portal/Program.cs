@@ -33,8 +33,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -75,7 +73,7 @@ app.UseAuthorization();
 app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/profile"), appBuilder =>
 {
     appBuilder.UseMiddleware<JwtMiddleware>();
-}); 
+});
 
 app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/BoardGamePlay/DeleteOrganisationBG"), appBuilder =>
 {

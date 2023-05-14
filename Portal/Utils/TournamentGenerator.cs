@@ -32,6 +32,7 @@ namespace Portal.Utils
             {
                 match.PlayerA = playersQueue.Dequeue();
                 match.PlayerB = playersQueue.Dequeue();
+                match.State = "SCHEDULED";
             }
 
             bool playersFitInBracket = players.Count == MathF.Pow(2, emptyTableRounds.Count);
@@ -98,6 +99,7 @@ namespace Portal.Utils
                     {
                         match.PlayerA = null;
                         match.PlayerB = playersQueue.Dequeue();
+                        match.State = "NOPLAYERS";
                         TournamentMatch emptyRunoff2 = new TournamentMatch
                         {
                             ID = "Runoff2_null_" + match.ID,
@@ -112,7 +114,6 @@ namespace Portal.Utils
 
                 emptyTableRounds.Add(runoffsTournamentRound);
             }
-
         }
 
         private static List<TournamentRound> GenerateEmptyTable(int playersCount)
@@ -131,7 +132,7 @@ namespace Portal.Utils
                     round.Matches = new List<TournamentMatch>(){
                         new TournamentMatch() {
                             NextMatchId = null,
-                            State = "SCHEDULED"
+                            State = "NOPLAYERS"
                         }
                     };
                 }
@@ -143,12 +144,12 @@ namespace Portal.Utils
                         round.Matches.Add(new TournamentMatch()
                         {
                             NextMatchId = match.ID,
-                            State = "SCHEDULED"
+                            State = "NOPLAYERS"
                         });
                         round.Matches.Add(new TournamentMatch()
                         {
                             NextMatchId = match.ID,
-                            State = "SCHEDULED"
+                            State = "NOPLAYERS"
                         });
                     }
                 }
@@ -161,4 +162,3 @@ namespace Portal.Utils
         public static List<TournamentParticipant> GetTestPlayers(int playerCount) => Enumerable.Range(1, playerCount).Select(number => new TournamentParticipant() { Name = "TournamentParticipant" + number }).ToList();
     }
 }
-

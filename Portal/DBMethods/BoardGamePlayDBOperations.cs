@@ -1,19 +1,15 @@
 ﻿using MySql.Data.MySqlClient;
-using MySqlX.XDevAPI.Common;
 using Portal.DTO;
 using Portal.Utils;
 using System.Data;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Portal.DBMethods
 {
     public class BoardGamePlayDBOperations
     {
-        MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
-        private readonly BoardGameDBOperations _boardGameDBOperations;
-        private const string _played_game_table = "played_game";
+        private MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
+        
         private const string _board_game_table = "board_game";
-        private const string _organisation_table = "organisation";
         private const string _board_game_player_table = "board_game_player";
         private const string _played_game = "played_game";
 
@@ -49,11 +45,11 @@ namespace Portal.DBMethods
                         Players = GetBGPlayersUsernamesByPlayId((string)r["id"])
                     }).ToList();
 
-                return t;
+                    return t;
                 }
             }
         }
-        
+
         public List<BoardGamePlayData> GetBGPlayUserIdWithPlayersCount(string? userId)
         {
             if (userId is null)
@@ -61,7 +57,7 @@ namespace Portal.DBMethods
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
                 c.Open();
-                var sqlCmdP = $"SELECT board_game.name, played_game.gameType, played_game.playerWinner, played_game.winnerPoints, played_game.playTime, played_game.datePlayed, played_game.id " +
+                var sqlCmdP = $"SELECT board_game.name, played_game.gameType, played_game.playerWinner, played_game.winnerPoints, played_game.playTime, played_game.datePlayed, played_game.id, played_game.fk_boardGameId " +
                     $"FROM `board_game_player` " +
                     $"RIGHT JOIN `played_game` " +
                     $"ON `board_game_player`.`fk_playedGameId`=`played_game`.`id` " +
@@ -87,9 +83,10 @@ namespace Portal.DBMethods
                         WinnerPoints = (int)r["winnerPoints"],
                         DatePlayed = DBUtils.ConvertFromDBVal<DateTime>(r["datePlayed"]).Date,
                         BoardGameType = DBUtils.ConvertFromDBVal<string>(r["gameType"]),
+                        BoardGameID = DBUtils.ConvertFromDBVal<string>(r["fk_boardGameId"]),
                         Players = GetBGPlayersUsernamesByPlayId((string)r["id"])
                     }).ToList();
-                return t;
+                    return t;
                 }
             }
         }
@@ -114,21 +111,23 @@ namespace Portal.DBMethods
                 }
             }
         }
+
         public string[] GetTopMonthPlayer(List<BoardGamePlayData> list, DateTime month)
         {
             if (list.Count != 0)
             {
-                List<BoardGamePlayData> listByMonth = new (list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year)));
-                if(listByMonth.Count != 0) { 
-                var result = listByMonth
-                    .GroupBy(i => i.Winner)
-                    .GroupBy(g => g.Count())
-                    .OrderByDescending(g => g.Key)
-                    .First()
-                    .Select(g => g.Key)
-                    .ToArray();
+                List<BoardGamePlayData> listByMonth = new(list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year)));
+                if (listByMonth.Count != 0)
+                {
+                    var result = listByMonth
+                        .GroupBy(i => i.Winner)
+                        .GroupBy(g => g.Count())
+                        .OrderByDescending(g => g.Key)
+                        .First()
+                        .Select(g => g.Key)
+                        .ToArray();
 
-                return result;
+                    return result;
                 }
                 return null;
             }
@@ -139,7 +138,7 @@ namespace Portal.DBMethods
         {
             if (list.Count != 0)
             {
-                List<BoardGamePlayData> listByMonth = new (list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year)));
+                List<BoardGamePlayData> listByMonth = new(list.Where(s => s.DatePlayed.Value.Month.Equals(month.Month) && s.DatePlayed.Value.Year.Equals(month.Year)));
                 if (listByMonth.Count != 0)
                 {
                     var result = listByMonth
@@ -164,7 +163,7 @@ namespace Portal.DBMethods
                 c.Open();
                 var sqlCmdBoardGame = $"SELECT * FROM {_board_game_table} WHERE id=@id";
 
-                using ( MySqlDataAdapter daBoardGame = new(sqlCmdBoardGame, c))
+                using (MySqlDataAdapter daBoardGame = new(sqlCmdBoardGame, c))
                 {
                     daBoardGame.SelectCommand.CommandType = CommandType.Text;
                     daBoardGame.SelectCommand.Parameters.Add("@id", MySqlDbType.VarChar).Value = boardGameid;
@@ -184,6 +183,7 @@ namespace Portal.DBMethods
                 }
             }
         }
+
         public BGPlayer[] GetBGPlayersByBGId(string playedGameId)
         {
             var sqlCmdBoardGame = $"SELECT * FROM {_board_game_player_table} WHERE fk_playedGameId=@fk_playedGameId";
@@ -201,6 +201,7 @@ namespace Portal.DBMethods
             var res = y.Select(u => new BGPlayer { ID = (string)u["id"], Nickname = (string)u["nickname"], }).ToArray();
             return res;
         }
+
         public string[] GetBGPlayersUsernamesByPlayId(string playedGameId)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
@@ -242,9 +243,7 @@ namespace Portal.DBMethods
                     var t = dt.AsEnumerable().Count();
                     return t;
                 }
-
             }
         }
-
     }
 }

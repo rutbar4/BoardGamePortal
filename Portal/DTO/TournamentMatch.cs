@@ -7,7 +7,7 @@ namespace Portal.DTO
         public string ID { get; set; } = GuidUtils.GenerateGUID();
         public string? NextMatchId { get; set; }
         public string? TournamentRoundText { get; set; }
-        public string? State { get; set; } = string.Empty;
+        public string? State { get; set; } = "NOPLAYERS";
 
         public List<TournamentParticipant> participants
         {

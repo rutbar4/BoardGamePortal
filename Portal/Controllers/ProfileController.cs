@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
 using Portal.DBMethods;
 using Portal.DTO;
@@ -11,8 +10,8 @@ namespace Portal.Controllers
     [ApiController]
     public class ProfileController : ControllerBase
     {
-        MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
-        private const string _organisation_table = "organisation"; 
+        private readonly MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
+        private const string _organisation_table = "organisation";
         private const string _user_table = "user";
 
         [HttpGet]

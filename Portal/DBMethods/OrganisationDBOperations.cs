@@ -1,16 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using MySql.Data.MySqlClient;
-using Mysqlx.Crud;
+﻿using MySql.Data.MySqlClient;
 using Portal.DTO;
 using Portal.Utils;
 using System.Data;
-using System.Xml.Linq;
 
 namespace Portal.DBMethods
 {
     public class OrganisationDBOperations
     {
-        MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
+        private readonly MySqlConnection conn = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
         private const string _organisation_table = "organisation";
         private const string _login_table = "login";
 
@@ -118,7 +115,6 @@ namespace Portal.DBMethods
             cmd.Parameters.Add("@city", MySqlDbType.VarChar).Value = organisation.City;
             cmd.Parameters.Add("@description", MySqlDbType.VarChar).Value = organisation.Description;
             cmd.ExecuteNonQuery();
-
 
             var updatePass = $"UPDATE {_login_table} SET password=@password WHERE id=@id";
             cmd.CommandText = updatePass;

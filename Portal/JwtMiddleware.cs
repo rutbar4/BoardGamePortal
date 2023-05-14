@@ -1,5 +1,4 @@
 ﻿using Microsoft.IdentityModel.Tokens;
-using Mysqlx;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -20,7 +19,7 @@ public class JwtMiddleware
     {
         var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last().ToString();
         var deconstructedToken = ValidateToken(token);
-        
+
         if (deconstructedToken is not null)
         {
             string? userId = deconstructedToken.Value.userId;
@@ -74,4 +73,3 @@ public class JwtMiddleware
         }
     }
 }
-

@@ -7,7 +7,6 @@ namespace Portal.Controllers
 {
     public class BoardGameController : ControllerBase
     {
-
         private readonly BoardGameDBOperations _boardGameDBOperations;
         private readonly BoardGamePlayDBOperations _boardGamePlayDBOperations;
 
@@ -18,7 +17,7 @@ namespace Portal.Controllers
         }
 
         [HttpPost]
-        [Route("AddUserBG")]///taisyti
+        [Route("AddUserBG")]
         public IActionResult AddBGOfUser([FromBody] object requestBody)
         {
             BoardGame? boardGame = JsonConvert.DeserializeObject<BoardGame>(requestBody.ToString());
@@ -39,14 +38,5 @@ namespace Portal.Controllers
 
             return Ok(boardGames);
         }
-
-        //[HttpPut]
-        //[Route("BGGGameId/{boardGameName}")]
-        //public IActionResult GetBGG(string boardGameName)
-        //{
-        //    var boardGames = _boardGameDBOperations.InsertBGGGameID(boardGameName);
-
-        //    return Ok(boardGames);
-        //}
     }
 }

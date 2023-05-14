@@ -7,18 +7,16 @@ namespace Portal.Controllers
 {
     [Route("api/BoardGamePlay")]
     [ApiController]
-    public class BoardGamePlayController :ControllerBase
+    public class BoardGamePlayController : ControllerBase
     {
         private readonly BoardGameDBOperations _boardGameDBOperations;
         private readonly BoardGamePlayDBOperations _boardGamePlayDBOperations;
-        private readonly UserDBOperations _userDBOperations;
         private readonly OrganisationDBOperations _organisationDBOperations;
 
-        public BoardGamePlayController(BoardGameDBOperations boardGameDBOperations, BoardGamePlayDBOperations boardGamePlayDBOperations, UserDBOperations userDBOperations, OrganisationDBOperations organisationDBOperations)
+        public BoardGamePlayController(BoardGameDBOperations boardGameDBOperations, BoardGamePlayDBOperations boardGamePlayDBOperations, OrganisationDBOperations organisationDBOperations)
         {
             _boardGameDBOperations = boardGameDBOperations;
             _boardGamePlayDBOperations = boardGamePlayDBOperations;
-            _userDBOperations = userDBOperations;
             _organisationDBOperations = organisationDBOperations;
         }
 
@@ -50,14 +48,14 @@ namespace Portal.Controllers
             var list = new List<BoardGamePlayData>();
             foreach (var play in boardGames)
             {
-                if(play is not null)
+                if (play is not null)
                 {
                     var i = _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(play.ID);
-                    if(i is not null)
-                    foreach(var j in i)
-                    {
-                        list.Add(j);
-                    }
+                    if (i is not null)
+                        foreach (var j in i)
+                        {
+                            list.Add(j);
+                        }
                 }
             }
 
@@ -84,7 +82,6 @@ namespace Portal.Controllers
                         }
                 }
             }
-
 
             var t = _boardGamePlayDBOperations.GetBGPlayUserIdWithPlayersCount(profileId);
 
@@ -115,7 +112,7 @@ namespace Portal.Controllers
                                     .GroupBy(name => name)
                                     .OrderByDescending(gp => gp.Count())
                                     .FirstOrDefault()?.Count(),
-                }) 
+                })
                 .ToList();
 
             return Ok(boardGamelist);
@@ -128,7 +125,6 @@ namespace Portal.Controllers
             if (userId is null)
                 return BadRequest("Invalid request body");
             var boardGames = _boardGameDBOperations.GetAllBGByUserId(userId);
-            //var plays = boardGames.Where(s => s is not null).Select(s => _boardGamePlayDBOperations.GetBGPlayByBgIdWithPlayersCount(s.ID)).ToList();
             var list = new List<BoardGamePlayData>();
             foreach (var play in boardGames)
             {
@@ -148,11 +144,11 @@ namespace Portal.Controllers
             list.AddRange(t);
             return Ok(list);
         }
+
         [HttpPost]
         [Route("TopMonthPlayers/{organisationId}")]
         public IActionResult GetTopMonthPlayers(string organisationId, [FromBody] DateTime month)
         {
-
             if (organisationId is null)
                 return BadRequest("Invalid request body");
             var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
@@ -185,7 +181,6 @@ namespace Portal.Controllers
         [Route("TopMonthBoardGames/{organisationId}")]
         public IActionResult GetTopMonthBG(string organisationId, [FromBody] DateTime month)
         {
-
             if (organisationId is null)
                 return BadRequest("Invalid request body");
 
@@ -217,12 +212,16 @@ namespace Portal.Controllers
 
         [HttpGet]
         [Route("BGPlaysCountbyOrganisationId/Top10/{organisationId}")]
-        public IActionResult GetTop10BGPlaysCountbyOrganisationId(string organisationId) //+send max count
+        public IActionResult GetTop10BGPlaysCountbyOrganisationId(string organisationId)
         {
             if (organisationId is null)
                 return BadRequest("Invalid request body");
             var boardGames = _boardGameDBOperations.GetAllBGByOrganisation(organisationId);
             var list = new List<BoardGamePlayCount>();
+
+            var t = _boardGamePlayDBOperations.GetBGPlayUserIdWithPlayersCount(organisationId);
+
+            list.AddRange(t.Select(p => new BoardGamePlayCount { BoardGameName = p.BoardGameName, PlayCount = _boardGamePlayDBOperations.GetBGPlayCount(p.BoardGameID) }));
             foreach (var play in boardGames)
             {
                 if (play is not null)
@@ -230,10 +229,10 @@ namespace Portal.Controllers
                     var count = _boardGamePlayDBOperations.GetBGPlayCount(play.ID);
                     var name = _boardGameDBOperations.GetBGByBDId(play.ID).Name;
                     if (count != 0)
-                    list.Add(new BoardGamePlayCount { BoardGameName = name, PlayCount = count});
+                        list.Add(new BoardGamePlayCount { BoardGameName = name, PlayCount = count });
                 }
             }
-            
+
             return Ok(list.OrderByDescending(p => p.PlayCount).Take(10));
         }
 
@@ -245,7 +244,7 @@ namespace Portal.Controllers
             if (boardGame is null)
                 return BadRequest("Invalid request body");
 
-           _boardGameDBOperations.InsertBGOfOrganisation(boardGame);
+            _boardGameDBOperations.InsertBGOfOrganisation(boardGame);
             var allOrgBoardGames = _boardGameDBOperations.GetAllBGByOrganisation(boardGame.OrganisationId);
 
             return Ok(allOrgBoardGames);
@@ -319,16 +318,5 @@ namespace Portal.Controllers
 
             return Ok(boardGames);
         }
-
-        //[HttpGet]
-        //[Route("GetBGDataByBgNameAndOrgId/{organisationName}")]
-        //public IActionResult GetBGDataByBgNameAndOrgId(string organisationID, string boardgameName)
-        //{
-        //    var boardGames = _boardGameDBOperations.GetBGbyOrgIdAndBGName(organisationID, boardgameName);
-
-        //    return Ok(boardGames);
-        //}
-
-
     }
 }
