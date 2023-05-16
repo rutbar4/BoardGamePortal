@@ -16,13 +16,6 @@ namespace Portal.Controllers
             _tournamentDBOperations = tournamentDBOperations;
         }
 
-        //// GET: api/<TournamentController>
-        //[HttpGet]
-        //public IEnumerable<string> Get()
-        //{
-        //    return new string[] { "value1", "value2" };
-        //}
-
         [HttpGet("{tournamentId}")]
         public IActionResult Get(string tournamentId)
         {
@@ -44,7 +37,6 @@ namespace Portal.Controllers
             return Ok(tournaments);
         }
 
-        // POST api/<TournamentController>
         [HttpPost]
         public IActionResult Post([FromBody] TournamentCreation tournamentData)
         {
@@ -65,16 +57,5 @@ namespace Portal.Controllers
             var tournament = _tournamentDBOperations.SelectTournament(tournamentId);
             return base.Ok(tournament);
         }
-        //// PUT api/<TournamentController>/5 //for winning points
-        //[HttpPut("{id}")]
-        //public void Put(int id, [FromBody] string tournamentMatches)
-        //{
-        //}
-
-        //// DELETE api/<TournamentController>/5
-        //[HttpDelete("{id}")]
-        //public void Delete(int id)
-        //{
-        //}
     }
 }

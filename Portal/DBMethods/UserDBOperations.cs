@@ -10,7 +10,7 @@ namespace Portal.DBMethods
         private const string _user_table = "user";
         private const string _login_table = "login";
 
-        internal void InsertUser(User model)
+        public void InsertUser(User model)
         {
             conn.Open();
             MySqlCommand cmd = conn.CreateCommand();
@@ -55,6 +55,8 @@ namespace Portal.DBMethods
             dapass.Fill(dtpass);
             var row = dt.AsEnumerable().FirstOrDefault();
             var rowpass = dtpass.AsEnumerable().FirstOrDefault();
+            if (row is null || rowpass is null)
+                return null;
             return new User
             {
                 ID = (string)row["id"],

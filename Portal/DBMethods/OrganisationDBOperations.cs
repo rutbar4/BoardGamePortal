@@ -11,7 +11,7 @@ namespace Portal.DBMethods
         private const string _organisation_table = "organisation";
         private const string _login_table = "login";
 
-        internal void InsertOrganisation(Organisation model)
+        public void InsertOrganisation(Organisation model)
         {
             conn.Open();
             MySqlCommand cmd = conn.CreateCommand();

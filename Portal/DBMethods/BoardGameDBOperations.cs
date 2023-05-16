@@ -20,7 +20,7 @@ namespace Portal.DBMethods
             _userDBOperations = userDBOperations;
         }
 
-        internal string[] GetAllBoardGamesNamesByOrganisationName(string organisationName)
+        public string[] GetAllBoardGamesNamesByOrganisationName(string organisationName)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
@@ -44,7 +44,7 @@ namespace Portal.DBMethods
             }
         }
 
-        internal string[] GetAllOrganisationsNames()//perkelti į organizacijų kontrollerį
+        public string[] GetAllOrganisationsNames()//perkelti į organizacijų kontrollerį
         {
             var sqlCmd = $"SELECT name FROM {_organisation_table}";
 
@@ -59,7 +59,7 @@ namespace Portal.DBMethods
             return names;
         }
 
-        internal Organisation[]? GetAllOrganisations()//perkelti į organizacijų kontrollerį //pabandyt su null
+        public Organisation[] GetAllOrganisations()
         {
             var sqlCmd = $"SELECT name, description, address, city, email FROM {_organisation_table}";
 
@@ -167,35 +167,6 @@ namespace Portal.DBMethods
             }
         }
 
-        public List<BoardGame> GetAllBGByOrganisationName(string? organisationName)
-        {
-            if (organisationName is null)
-                return null;
-
-            using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
-            {
-                c.Open();
-                var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE name=@name";
-
-                using (MySqlDataAdapter da = new(sqlCmd, c))
-                {
-                    da.SelectCommand.CommandType = CommandType.Text;
-                    da.SelectCommand.Parameters.Add("@name", MySqlDbType.VarChar).Value = organisationName;
-
-                    DataTable dt = new();
-                    da.Fill(dt);
-                    var rows = dt.AsEnumerable().Select(row => new BoardGame
-                    {
-                        ID = (string)row["id"],
-                        Name = (string)row["name"],
-                        Description = DBUtils.ConvertFromDBVal<string>(row["description"])
-                    }).ToList();
-
-                    return rows;
-                }
-            }
-        }
-
         public List<BoardGame> GetAllBGByUserId(string? userid)
         {
             if (userid is null)
@@ -222,8 +193,7 @@ namespace Portal.DBMethods
                 return rows;
             }
         }
-
-        internal string[] GetAllBoardGamesNamesByUserID(string userId)
+        public string[] GetAllBoardGamesNamesByUserID(string userId)
         {
             var sqlCmd = $"SELECT * FROM {_board_game_table} WHERE fk_organisationId=@orgId";
 
@@ -239,7 +209,7 @@ namespace Portal.DBMethods
             return boardGames;
         }
 
-        internal string GetBGId(BoardGamePlayData boardGamePlayData)
+        public string GetBGId(BoardGamePlayData boardGamePlayData)
         {
             var organisation = GetOrganisation(boardGamePlayData.Organisation);
             if (organisation is null)
@@ -249,13 +219,6 @@ namespace Portal.DBMethods
                 return bgu.ID;
             }
 
-            var bg = GetBGbyOrgIdAndBGName(organisation.ID, boardGamePlayData.BoardGameName);
-            return bg.ID;
-        }
-
-        internal string GetBGIdByUser(BoardGamePlayData boardGamePlayData)
-        {
-            var organisation = GetUser(boardGamePlayData.Organisation);
             var bg = GetBGbyOrgIdAndBGName(organisation.ID, boardGamePlayData.BoardGameName);
             return bg.ID;
         }
@@ -327,7 +290,7 @@ namespace Portal.DBMethods
             }
         }
 
-        internal void DeleteBGOfOrganisation(string boardGameId)
+        public void DeleteBGOfOrganisation(string boardGameId)
         {
             conn.Open();
             MySqlCommand cmd = conn.CreateCommand();
@@ -340,7 +303,7 @@ namespace Portal.DBMethods
             conn.Close();
         }
 
-        internal void InsertBGOfOrganisation(BoardGame model)
+        public void InsertBGOfOrganisation(BoardGame model)
         {
             conn.Open();
             MySqlCommand cmd = conn.CreateCommand();
@@ -357,22 +320,7 @@ namespace Portal.DBMethods
             conn.Close();
         }
 
-        internal void InsertBGGGameID(BoardGame model)
-        {
-            conn.Open();
-            MySqlCommand cmd = conn.CreateCommand();
-            cmd.Connection = conn;
-
-            var insertQuery = $"SELECT * FROM {_board_game_table} WHERE id=@id SET boardGameGeeksGameId=@boardGameGeeksGameId";
-            cmd.CommandText = insertQuery;
-            cmd.Parameters.Add("@id", MySqlDbType.VarChar).Value = model.ID;
-            cmd.Parameters.Add("@boardGameGeeksGameId", MySqlDbType.VarChar).Value = null;
-            cmd.ExecuteNonQuery();
-
-            conn.Close();
-        }
-
-        internal void InsertBGPlayData(BoardGamePlayData model, string boardGameId)
+        public void InsertBGPlayData(BoardGamePlayData model, string boardGameId)
         {
             conn.Open();
             MySqlCommand cmd = conn.CreateCommand();
@@ -387,8 +335,8 @@ namespace Portal.DBMethods
             cmd.Parameters.Add("@gameType", MySqlDbType.VarChar).Value = model.BoardGameType;
             cmd.Parameters.Add("@timePlayed", MySqlDbType.DateTime).Value = new DateTime(1000, 1, 1, int.Parse(model.Time_h), int.Parse(model.Time_m), 0);
             cmd.Parameters.Add("@winnerpoints", MySqlDbType.Int32).Value = model.WinnerPoints;
-            if (model.DatePlayed is not null)
-                cmd.Parameters.Add("@datePlayed", MySqlDbType.DateTime).Value = model.DatePlayed;
+            if(model.DatePlayed is not null)
+            cmd.Parameters.Add("@datePlayed", MySqlDbType.DateTime).Value = model.DatePlayed;
             else
                 cmd.Parameters.Add("@datePlayed", MySqlDbType.DateTime).Value = DateTime.Today;
             cmd.ExecuteNonQuery();
@@ -396,7 +344,7 @@ namespace Portal.DBMethods
             conn.Close();
         }
 
-        internal void InsertBGPlayers(BoardGamePlayers players)
+        public void InsertBGPlayers(BoardGamePlayers players)
         {
             conn.Open();
             var cmd = conn.CreateCommand();
