@@ -13,7 +13,7 @@ namespace Portal.DBMethods
         private const string _tournament_player_table = "tournament_player";
         private const string _organisation_table = "organisation";
 
-        internal void InsertTournament(TournamentCreation model)
+        public void InsertTournament(TournamentCreation model)
         {
             using MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
             c.Open();
@@ -34,7 +34,7 @@ namespace Portal.DBMethods
             c.Close();
         }
 
-        internal void InsertTournamentMatches(List<TournamentMatch> tournamentMatches, string tournamentId)
+        public void InsertTournamentMatches(List<TournamentMatch> tournamentMatches, string tournamentId)
         {
             using MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;");
             c.Open();
@@ -72,7 +72,7 @@ namespace Portal.DBMethods
             c.Close();
         }
 
-        internal List<Tournament> SelectOrganisationsTournaments(string organisationId)
+        public List<Tournament> SelectOrganisationsTournaments(string organisationId)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
@@ -100,8 +100,7 @@ namespace Portal.DBMethods
                 return tournaments;
             }
         }
-
-        internal List<Tournament> SelectAllTournaments()
+        public List<Tournament> SelectAllTournaments()
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
@@ -129,8 +128,7 @@ namespace Portal.DBMethods
                 return tournaments;
             }
         }
-
-        internal string GetOrgNameByTournamentId(string orgId)
+        public string GetOrgNameByTournamentId(string orgId)
         {
             string orgName = null;
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
@@ -151,8 +149,7 @@ namespace Portal.DBMethods
                 return orgName;
             }
         }
-
-        internal Tournament SelectTournament(string tournamentId)
+        public Tournament SelectTournament(string tournamentId)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
@@ -183,8 +180,7 @@ namespace Portal.DBMethods
                 return tournament;
             }
         }
-
-        internal string UpdateMatch(TourmanentMatchUpdate match)
+        public string UpdateMatch(TourmanentMatchUpdate match)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
@@ -254,8 +250,7 @@ namespace Portal.DBMethods
                 return tournamentId;
             }
         }
-
-        internal List<TournamentMatch> SelectTournamentMatches(string tournamentId)
+        public List<TournamentMatch> SelectTournamentMatches(string tournamentId)
         {
             using (MySqlConnection c = new MySqlConnection("server=localhost;port=3306;database=board_games_registration_system;username=dev;password=*developeR321;Allow User Variables=True;"))
             {
